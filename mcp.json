@@ -4,7 +4,7 @@
     "bic-chart": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@bicharts/chart-mcp@0.6.71"]
+      "args": ["-y", "@bicharts/chart-mcp@0.6.72"]
     }
   }
 }

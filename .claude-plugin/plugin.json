@@ -1,7 +1,7 @@
 {
   "name": "regiabi-charts",
   "displayName": "RegiaBI charts",
-  "version": "0.6.71",
+  "version": "0.6.72",
   "description": "Chart code that fits your data first try, as source you own: you pay to author it, never to run it.",
   "author": {
     "name": "CodeX Enterprises LLC",
@@ -19,7 +19,7 @@
   "mcpServers": {
     "bic-chart": {
       "command": "npx",
-      "args": ["-y", "@bicharts/chart-mcp@0.6.71"],
+      "args": ["-y", "@bicharts/chart-mcp@0.6.72"],
       "env": {
         "BIC_LICENSEE": "${user_config.licensee}",
         "BIC_LICENSE_KEY": "${user_config.license_key}",
