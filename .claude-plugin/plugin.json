@@ -11,6 +11,7 @@
   "repository": "https://github.com/codexguy/regiabi-plugins",
   "license": "MIT",
   "keywords": ["charts", "data-visualization", "d3", "plotly", "mcp", "fabric", "rayfin", "power-bi", "dashboard"],
+  "icon": "./.claude-plugin/icon.png",
   "documentationUrl": "https://bizintelligencechampions.com/regiabi/developers?loc=plugin",
   "supportUrl": "https://bizintelligencechampions.com/support",
   "privacyPolicyUrl": "https://bizintelligencechampions.com/privacy",
