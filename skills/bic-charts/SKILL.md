@@ -797,9 +797,13 @@ off its `BicChartPanel`, so pass no size unless you mean another one. A `WARNING
 label cut off at that size: deal with it before you call the chart done. The reply says whether more room fixes it.
 Never edit the generated chart code by hand: if something's wrong with a generated chart, regenerate it
 (`generate_chart` with a prompt describing the fix) or report it.
+Then run `check_app` once on the whole app, before every deploy: it reads how the page uses the library (selection
+through `useBicFilter` + `selects`, a chart's own controls through `useBicControls`, notes through `annotations`, every
+chart in a `BicChartPanel`), draws every chart together, and compares the stack with npm. Each finding names the file,
+the line and the call to use instead; fix the ERRORs in the app's own files before deploying.
 You don't need to deploy to check a chart. The template's `validate:visual` checks `VegaVisual` factories; a
-RegiaBI chart's check is `check_chart` - don't list it there. And `check_chart` checks the chart, not the app: the
-template's app-validation in the portal embed still applies. Then `npx tsc -b` and the tests. To test the page's behaviour,
+RegiaBI chart's check is `check_chart` - don't list it there. `check_chart` and `check_app` check the charts and how
+the app uses them; the template's app-validation in the portal embed still applies. Then `npx tsc -b` and the tests. To test the page's behaviour,
 `@bicharts/chart-host/testing` has a reader's gestures - `clickMark`, `clickEmpty`, `selectedRows` - for the checks
 worth keeping: a second click on a mark clears its filter, and a page Clear clears the chart's marks. Deploying (`npx rayfin up`), on Rayfin 1.36.1:
 - Signed in? `npx rayfin login status` (a subcommand, not a `--status` flag); `npx rayfin login` if not.
