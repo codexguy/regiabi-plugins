@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "bic-chart": {
+      "command": "npx",
+      "args": ["-y", "@bicharts/chart-mcp@0.6.67"]
+    }
+  }
+}

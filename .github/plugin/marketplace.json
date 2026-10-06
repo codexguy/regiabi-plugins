@@ -1,0 +1,19 @@
+{
+  "name": "regiabi",
+  "owner": {
+    "name": "CodeX Enterprises LLC",
+    "url": "https://bizintelligencechampions.com/regiabi"
+  },
+  "metadata": {
+    "description": "RegiaBI plugins for AI coding agents",
+    "version": "0.6.67"
+  },
+  "plugins": [
+    {
+      "name": "regiabi-charts",
+      "description": "Chart code that fits your data first try, as source you own: you pay to author it, never to run it.",
+      "version": "0.6.67",
+      "source": "./"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "regiabi-charts",
+  "displayName": "RegiaBI charts",
+  "version": "0.6.67",
+  "description": "Chart code that fits your data first try, as source you own: you pay to author it, never to run it.",
+  "author": {
+    "name": "CodeX Enterprises LLC",
+    "url": "https://bizintelligencechampions.com/regiabi"
+  },
+  "homepage": "https://bizintelligencechampions.com/regiabi/developers?loc=plugin",
+  "repository": "https://github.com/codexguy/regiabi-plugins",
+  "license": "MIT",
+  "keywords": ["charts", "data-visualization", "d3", "plotly", "mcp", "fabric", "rayfin", "power-bi", "dashboard"],
+  "documentationUrl": "https://bizintelligencechampions.com/regiabi/developers?loc=plugin",
+  "supportUrl": "https://bizintelligencechampions.com/support",
+  "privacyPolicyUrl": "https://bizintelligencechampions.com/privacy",
+  "termsOfServiceUrl": "https://bizintelligencechampions.com/terms-regiabi",
+  "mcpServers": {
+    "bic-chart": {
+      "command": "npx",
+      "args": ["-y", "@bicharts/chart-mcp@0.6.67"],
+      "env": {
+        "BIC_LICENSEE": "${user_config.licensee}",
+        "BIC_LICENSE_KEY": "${user_config.license_key}",
+        "BIC_SECRET_KEY": "${user_config.secret_key}"
+      }
+    }
+  },
+  "userConfig": {
+    "licensee": {
+      "type": "string",
+      "title": "Licensee",
+      "description": "The licensee name on your RegiaBI trial or paid account. Leave blank if you keep it in ~/.bic/credentials.json."
+    },
+    "license_key": {
+      "type": "string",
+      "title": "License key",
+      "description": "The license key for that account. Leave blank if you keep it in ~/.bic/credentials.json.",
+      "sensitive": true
+    },
+    "secret_key": {
+      "type": "string",
+      "title": "Secret key (optional)",
+      "description": "Only if your account uses one.",
+      "sensitive": true
+    }
+  }
+}
