@@ -31,12 +31,12 @@
     "licensee": {
       "type": "string",
       "title": "Licensee",
-      "description": "The licensee name on your RegiaBI trial or paid account. Leave blank if you keep it in ~/.bic/credentials.json."
+      "description": "Leave blank to sign in through your browser instead. Otherwise, the licensee name on your RegiaBI account."
     },
     "license_key": {
       "type": "string",
       "title": "License key",
-      "description": "The license key for that account. Leave blank if you keep it in ~/.bic/credentials.json.",
+      "description": "Leave blank to sign in through your browser instead. Otherwise, the license key for that account.",
       "sensitive": true
     },
     "secret_key": {

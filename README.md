@@ -76,14 +76,19 @@ VS Code, Cursor, Claude Desktop and any other MCP client can run the server dire
 
 ## Configure
 
-Writing a chart needs a RegiaBI trial or paid account. Running a chart you've already generated needs nothing.
-[Start a free trial](https://bizintelligencechampions.com/regiabi/developers?loc=ghmcp).
+Nothing, usually. Writing a chart needs a RegiaBI account; running a chart you've already generated needs nothing.
 
-Give the server your account's credentials in one of two ways:
+**Sign in when it asks.** The first time your agent calls a tool that needs an account, the server opens your
+browser at bizintelligencechampions.com. Sign in, or create a free account (it comes with a free trial), and click
+**Allow**. The call your agent made then finishes by itself. The server keeps the sign-in in `~/.bic/oauth.json`
+and renews it on its own, and you can sign a device out at any time from your account page.
 
-- **When the plugin asks** (Claude Code prompts for them on install, and keeps the key in your system's secure
-  credential store), or as environment variables on the server: `BIC_LICENSEE` and `BIC_LICENSE_KEY`, plus
-  `BIC_SECRET_KEY` if your account uses one.
+**Or use a license key** (a machine with no browser, CI, a container). Leave sign-in alone and give the server
+your account's credentials instead, in one of two ways:
+
+- **When the plugin asks** (Claude Code prompts on install and keeps the key in your system's secure credential
+  store), or as environment variables on the server: `BIC_LICENSEE` and `BIC_LICENSE_KEY`, plus `BIC_SECRET_KEY`
+  if your account uses one.
 - **A credentials file**, so no secret ever sits in a project's committed config. Put this in
   `~/.bic/credentials.json` (or point `BIC_CREDENTIALS_FILE` at another path):
 
@@ -91,7 +96,7 @@ Give the server your account's credentials in one of two ways:
   { "licensee": "...", "licenseKey": "..." }
   ```
 
-Leave the plugin's fields blank if you use the file. Values set on the server win over the file.
+A key, when one is set, always wins over a sign-in. Leave the plugin's fields blank to sign in instead.
 
 ## Use
 
@@ -108,6 +113,8 @@ suit your semantic model. `suggest_charts` answers from the model's own numbers.
 
 ## What it runs, sends and fetches
 
+- **Signing in** opens your browser at `bizintelligencechampions.com` once; the server then keeps an access token and a
+  refresh token in `~/.bic/oauth.json` (readable only by you) and sends the access token with each call to the service.
 - **It runs** one local process: `npx -y @bicharts/chart-mcp@<version>`, the exact version the plugin pins. npm
   downloads that package from the public npm registry the first time.
 - **`assess_data_shape` sends nothing.** It profiles your data on your machine.
