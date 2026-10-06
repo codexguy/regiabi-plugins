@@ -15,6 +15,12 @@ run time, no per-render cost, and no network call. `@bicharts/chart-host` runs i
 generates it. Generation happens **once, at build time, by you** — never in your users'
 browsers.
 
+**Signing in needs no setup.** The first call that needs an account (`list_eligible_charts`,
+`generate_chart`) opens the person's browser on a sign-in page, waits for them, and then finishes
+the call. Tell them a browser tab is about to open. If the call comes back with "Sign in to
+continue" and a link instead, give them that link, and call again once they've signed in. A key in
+the server's environment is only for machines with no browser, such as CI.
+
 ## 0. Decide what to pull (only if you are starting from a data MODEL)
 
 Skip this if you already have a table. If you are holding a semantic model, a warehouse schema or
