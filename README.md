@@ -106,6 +106,21 @@ cross-filtering between charts, sizing and theming are the host library's job, s
 **Building a Microsoft Fabric App?** Scaffold it from Rayfin's data app template, then ask your agent which charts
 suit your semantic model. `suggest_charts` answers from the model's own numbers.
 
+## What it runs, sends and fetches
+
+- **It runs** one local process: `npx -y @bicharts/chart-mcp@<version>`, the exact version the plugin pins. npm
+  downloads that package from the public npm registry the first time.
+- **`assess_data_shape` sends nothing.** It profiles your data on your machine.
+- **`list_eligible_charts`, `suggest_charts` and `generate_chart` call the RegiaBI service** at
+  `bizintelligencechampions.com` with your account's credentials and a profile of your table: column names, types,
+  counts and summary statistics. By default no rows are sent; a `privacy_level` argument can send less (names
+  only) or more (obfuscated sample rows). `suggest_charts` queries your semantic model through your Fabric App
+  project's own `fabric-app-data` CLI, signed in as you, and sends the service the same kind of profile.
+- **It writes** the generated chart code and its data into the folder you ask for, and nowhere else.
+- **Telemetry:** a usage counter per service call (the tool's name, the server's version and a random value), one
+  row when `generate_chart` hands code over (the call's duration, the row count, the language and the server's
+  build) and one when a generation fails after the service answered. No data and no machine identity. Set `BIC_MCP_TELEMETRY=0` in the server's environment to turn it off.
+
 ## Learn more
 
 - [RegiaBI for developers](https://bizintelligencechampions.com/regiabi/developers?loc=ghmcp): docs, examples and
