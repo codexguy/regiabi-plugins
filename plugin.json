@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "regiabi-charts",
-  "version": "0.6.72",
+  "version": "0.6.73",
   "description": "Chart code that fits your data first try, as source you own: you pay to author it, never to run it.",
   "author": {
     "name": "CodeX Enterprises LLC",

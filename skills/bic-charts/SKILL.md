@@ -180,6 +180,12 @@ disqualifies it), `renderer` (a JavaScript or TypeScript project gets D3 without
 `@bicharts/chart-host` draws), `width`/`height`, and
 `reasoning_mode: "1P"` when you want the cheapest, fastest pass.
 
+**Two parameters are the user's to answer, not yours to guess.** `level_of_detail` (how much of
+the data they want to see: every observation, a distribution, or one mark per category) and
+`font_family` (a font or house style they've named) are preferences, not properties of the data.
+When one matters to the request and the user hasn't said, ask them in one short question;
+otherwise leave it unset, which changes nothing.
+
 **Generation takes minutes.** Fire the calls for independent charts **in parallel** rather
 than in sequence — it is the difference between ~4 minutes and ~12.
 
