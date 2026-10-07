@@ -124,9 +124,15 @@ suit your semantic model. `suggest_charts` answers from the model's own numbers.
   only) or more (obfuscated sample rows). `suggest_charts` queries your semantic model through your Fabric App
   project's own `fabric-app-data` CLI, signed in as you, and sends the service the same kind of profile.
 - **It writes** the generated chart code and its data into the folder you ask for, and nowhere else.
-- **Telemetry:** a usage counter per service call (the tool's name, the server's version and a random value), one
-  row when `generate_chart` hands code over (the call's duration, the row count, the language and the server's
-  build) and one when a generation fails after the service answered. No data and no machine identity. Set `BIC_MCP_TELEMETRY=0` in the server's environment to turn it off.
+- **Telemetry:** one row when `generate_chart` hands code over (the call's duration, the row count, the language
+  and the server's build) and one when a generation fails after the service answered. No data, and no usage
+  counter: the service counts calls from the requests it receives. Set `BIC_MCP_TELEMETRY=0` in the server's
+  environment to turn both rows off.
+- **Signing in sends this computer's name** (its hostname), so the sign-in shows up on your account page and you can
+  sign that machine out on its own.
+- **`check_app` asks the npm registry** for the latest versions of the packages your app uses (`check_npm: false`
+  skips it), and **`preview.html` loads d3 and mermaid from cdn.jsdelivr.net** when you open it (it's only written
+  when you pass `preview_html: true`).
 
 ## Learn more
 
