@@ -42,7 +42,7 @@ on the same picture, not a looser one.
 | Card with multiple KPI | 2 continuous | needs 180x100 px | D3, Plotly | Multiple independent numeric metrics that should be surfaced together; KPI dashboards; long-narrow / short-wide viewports |
 | Card with sparkline | 1 continuous | needs 140x80 px | D3, Plotly | One numeric metric trending over an ordered dimension; small viewports |
 | Chord diagram | 2 categorical, 1 continuous | <=25 categories, <=30 nodes, needs 320x320 px | D3 | Requires matrix data showing bidirectional flows between entities; best for migration, trade, or relationship intensity data |
-| Circular heatmap | 1 categorical, 1 continuous | <=60 categories, needs 280x280 px | D3, Matplotlib, Plotly | Requires two dimensions - a cyclical one such as hour, weekday or month around the angle and a second category or date for the rings - and one measure for the colour |
+| Circular heatmap | 1 categorical, 1 continuous | <=60 categories, needs 520x380 px | D3, Matplotlib, Plotly | Requires two dimensions - a cyclical one such as hour, weekday or month around the angle and a second category or date for the rings - and one measure for the colour |
 | Clustered heatmap | 2 categorical, 1 continuous | <=50 categories, needs 320x320 px | Plotly | Requires two variables for matrix values |
 | Connected scatterplot | 2 continuous, 6+ time points | needs 300x300 px | D3, PLOTLY | Best for the joint trajectory of two related metrics over time (e.g. units vs revenue, unemployment vs inflation) where the path shape is the insight |
 | Custom small multiples | 1 categorical, 1 continuous | <=16 categories, needs 320x240 px | D3, Matplotlib, Plotly, Seaborn | Best when comparing patterns across categories |
@@ -62,7 +62,7 @@ on the same picture, not a looser one.
 | Gauge | 1 continuous, a bounded scale | needs 140x140 px | D3 | A value against a ceiling the data states - a percentage, a rate, or a measure that has a target - overall or one dial per category; a constant value is a valid reading |
 | Grouped bar chart | 2 categorical, 1 continuous | needs 700x480 px | D3, Matplotlib, Plotly, Seaborn | Requires one categorical, one subcategory, and one numeric variable |
 | Heatmap | 2 categorical, 1 continuous | <=50 categories, needs 460x340 px | D3, Matplotlib, Plotly, Seaborn | Requires two categorical or ordinal fields for the rows and columns, and one measure for the cell colour |
-| Hexbin plot | 2 continuous | needs 280x280 px | D3, Matplotlib, Plotly, Seaborn | Requires two continuous variables |
+| Hexbin plot | 2 continuous | needs 400x300 px | D3, Matplotlib, Plotly, Seaborn | Requires two continuous variables |
 | Histogram | 1 continuous | needs 400x300 px | D3, Matplotlib, Plotly, Seaborn | Requires one continuous variable |
 | Horizon chart | 1 categorical, 1 continuous, 12+ time points | needs 800x560 px | D3, Matplotlib, Plotly | Best for dense time series dashboards |
 | Horizontal/vertical span plot | 1 categorical, 2 continuous | needs 400x300 px | D3, Matplotlib, Plotly, Seaborn | Requires a category and two numeric bounds per category - a low and a high, or a start and an end - on one shared scale |
@@ -72,7 +72,7 @@ on the same picture, not a looser one.
 | Lag plot (scatter of value vs lag) | 1 continuous, 20+ time points | needs 280x280 px | D3, Matplotlib, Plotly, Seaborn, Statsmodels | Requires a datetime series with one continuous variable |
 | Line chart | 1 continuous | needs 400x300 px | D3, Matplotlib, Plotly, Seaborn | One or more continuous series over an ordered/temporal axis |
 | Linear gauge | 1 continuous, a bounded scale | needs 180x50 px | D3 | A value against a ceiling the data states, overall or one track per category, in a short wide tile - percent complete, utilisation, progress to a target; a constant value is a valid reading |
-| Lollipop chart | 1 categorical, 1 continuous | <=50 categories, needs 600x420 px | D3, PLOTLY | Best as a cleaner bar replacement for ranking many categories by a single measure |
+| Lollipop chart | 1 categorical, 1 continuous | <=50 categories, needs 700x480 px | D3, PLOTLY | Best as a cleaner bar replacement for ranking many categories by a single measure |
 | Marimekko / Mosaic plot | 2 categorical, 1 continuous | needs 320x280 px | D3 | Best for 3-10 outer × 3-10 inner categories with a positive measure |
 | Mermaid diagram | 1 categorical | <=150 categories, needs 360x240 px | D3 | A source and a target column (a process, a hand-off chain, a dependency list), two to four nested categories (an org or product hierarchy), or a date beside an event name (milestones, releases, history) - up to a few dozen boxes |
 | Motion bubble chart | 1 categorical, 2 continuous, 3+ time points | <=40 categories, needs 360x320 px | D3 | Requires one categorical whose members are the bubbles, two measures for position and a time column with 3 or more ordered periods; best for watching entities travel - plans by subscribers and churn, countries by wealth and lifespan, teams by cost and output |
@@ -104,7 +104,7 @@ on the same picture, not a looser one.
 | Stacked bar chart | 2 categorical, 1 continuous | needs 700x480 px | D3, Matplotlib, Plotly, Seaborn | Requires one categorical, one subcategory, and one numeric variable |
 | Stem plot | 1 continuous | needs 360x280 px | D3, Matplotlib, Plotly | Requires one measure read along an ordered sequence - a time step, a row index or an ordered category |
 | Step plot | 1 continuous | needs 460x340 px | D3, Matplotlib, Plotly, Seaborn | Requires ordered categories with one continuous variable |
-| Streamgraph | 1 categorical, 1 continuous, 8+ time points | needs 400x300 px | D3, Plotly | Best with 3-12 categorical series and a continuous time axis with at least 15-30 evenly-spaced points |
+| Streamgraph | 1 categorical, 1 continuous, 8+ time points | needs 520x380 px | D3, Plotly | Best with 3-12 categorical series and a continuous time axis with at least 15-30 evenly-spaced points |
 | Strip plot | 1 continuous | needs 700x480 px | D3, Matplotlib, Plotly, Seaborn | Requires one categorical and one continuous variable; jitter on the category axis prevents overplot at the same value |
 | Sunburst chart | 2 categorical, 1 continuous | needs 400x300 px | D3, Matplotlib, Plotly | Requires hierarchical categorical data |
 | Tabular with embedded | 1 categorical, 1 continuous | <=40 categories, needs 420x200 px | D3 | Best for a small set of items compared across several attributes at once (a forecast/roster/scorecard table) |
@@ -124,7 +124,7 @@ on the same picture, not a looser one.
 | What-if predictor | 3 continuous | needs 520x300 px | D3 | Three to ten numeric measures over at least thirty rows that move together - stores, products, campaigns, regions by quarter - when the question is 'if these were X and Y, what would the others likely be?'; an ordered rating or size and one category of up to six values can be pinned too |
 | What-if projection | 1 continuous, 6+ time points | needs 420x280 px | D3 | A dated measure with at least six periods when the question is what happens next under an assumption the reader chooses - revenue against a target, headcount, subscribers; bind a What-If parameter measure to drive the rate from a slicer |
 | What-if scenarios | 1 continuous, 6+ time points | needs 480x320 px | D3 | A dated measure with at least six periods when the question is how far apart the outcomes of several assumptions land - revenue under a range of growth rates, headcount, subscribers; bind a What-If parameter column to draw exactly the range you defined |
-| Word cloud | 1 categorical | <=100 categories, needs 280x200 px | Matplotlib, Plotly | Requires text data or pre-computed word-frequency pairs; best for qualitative text exploration |
+| Word cloud | 1 categorical | <=100 categories, needs 280x200 px | D3, Matplotlib, Plotly | Requires text data or pre-computed word-frequency pairs; best for qualitative text exploration |
 | World (Bubbles) | lat/lon | needs 400x300 px | D3 | Best for point or country-level data spanning more than one continent: offices, shipments, users or revenue by country, with a measure for bubble size and optionally a second measure or category for color |
 | World Choropleth | 1 categorical, geo: country-iso3/country-iso2/country-name | <=250 categories, needs 400x300 px | D3, PLOTLY | Best for country-level metrics: sales, users, or population by country, any measure that varies by nation (keyed to country names or ISO codes) |
 | World tile-grid cartogram | 1 categorical, geo: country-iso3/country-iso2/country-name | <=250 categories, needs 510x420 px | D3 | Best with one row per country and a single measure, when the question is which countries are high or low rather than where they are |
