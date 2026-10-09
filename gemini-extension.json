@@ -1,11 +1,11 @@
 {
   "name": "regiabi-charts",
-  "version": "0.6.78",
+  "version": "0.6.79",
   "description": "Chart code that fits your data first try, as source you own: you pay to author it, never to run it.",
   "mcpServers": {
     "bic-chart": {
       "command": "npx",
-      "args": ["-y", "@bicharts/chart-mcp@0.6.78"]
+      "args": ["-y", "@bicharts/chart-mcp@0.6.79"]
     }
   }
 }
