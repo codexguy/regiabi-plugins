@@ -180,11 +180,29 @@ disqualifies it; leave it unset when they only asked for a chart, and the engine
 `@bicharts/chart-host` draws), `width`/`height`, and
 `reasoning_mode: "1P"` when you want the cheapest, fastest pass.
 
-**Two parameters are the user's to answer, not yours to guess.** `level_of_detail` (how much of
+**Settings are the user's to answer, not yours to guess.** Every `generate_chart` result carries a
+`structuredContent.settings` block: `applied` lists each setting that took effect and whose choice it
+was (`user`, `app`, `default`, `server-roll`, `from-prompt`), `askable` names the ones still open to
+the user and how to set each, and `conflicts` lists arguments that were not sent, each with its
+reason. The reply's text carries the same news in one `Settings:` line (what the user set, what the
+engine picked, what was dropped), for a client that shows only the text. `engineChoices` says whether
+the server reported what it picked; when it is `unavailable` the engine may have picked where a row
+reads `default`, so never tell the user it picked nothing. Most settings are
+passed only when the user has said them in their own words: a title, data labels, a legend position,
+a limit, a date grain, an overlay, a font. A few are worth one question when they matter and the user
+hasn't said: `chart_style` (which family of charts to consider: the familiar forms or the other types), `level_of_detail` (how much of
 the data they want to see: every observation, a distribution, or one mark per category) and
-`font_family` (a font or house style they've named) are preferences, not properties of the data.
-When one matters to the request and the user hasn't said, ask them in one short question;
-otherwise leave it unset, which changes nothing.
+`culture` (their language and region), and, once the chart is drawn, the live options
+`settings.askable` marks as `offer` (whether an animated chart plays by itself, where a card deck's
+flip controls sit). `font_family` is a font or house style they've named, never one read off the
+data. Put at most ONE consolidated question to them before the first `generate_chart` and one after
+it, giving each row's options (the second uses only the `askable` rows whose `phase` is
+`after-generate`); never ask again what the conversation already answered, and never ask
+about theme, size, selection or cross-filtering, which the host app owns. An answer is an argument on
+the next `generate_chart`, or, for a live setting, an option in the emitted component
+(`<EnrollmentChart ... options={{ animAutoPlay: true }} />`). When you can't ask (a sub-agent, an
+unattended run), ask nothing, use the defaults, and tell the user which settings were assumed from
+`settings.applied`. `get_guide` with topic `settings` lists every row with its options.
 
 **Generation takes minutes.** Fire the calls for independent charts **in parallel** rather
 than in sequence — it is the difference between ~4 minutes and ~12.
