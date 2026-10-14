@@ -98,6 +98,7 @@ on the same picture, not a looser one.
 | Sankey alluvial flow | 2 categorical, 1 continuous | <=10 categories, <=80 edges, needs 420x280 px | D3, Matplotlib, Plotly | Requires at least two categorical variables |
 | Scatter plot | 2 continuous | needs 460x340 px | D3, Matplotlib, Plotly, Seaborn | Requires two continuous variables |
 | Seasonal decomposition | 1 continuous, 24+ time points | needs 320x360 px | Matplotlib, Plotly, Statsmodels | Requires a datetime series with one continuous variable and at least two full seasonal cycles |
+| Selection explainer | 2 continuous | needs 560x360 px | D3 | Two measures over thirty or more rows that also carry other fields - region, plan, tenure, size - when the question is 'what do these points have in common?' |
 | Slope chart | 1 categorical, 1 continuous, 2+ time points | <=40 categories, needs 460x340 px | D3, PLOTLY | Best for two-period change across many categories: YoY by region/segment, before/after comparisons, ranking shifts between two snapshots |
 | Spiral plot | 1 continuous, 12+ time points | needs 320x320 px | D3, PLOTLY | Best for long, finely-grained, strongly periodic series (years of daily data) where the cyclic pattern is the story |
 | Stacked area chart | 1 categorical, 1 continuous | needs 460x340 px | D3, Matplotlib, Plotly | Requires ordered categories with multiple continuous series |

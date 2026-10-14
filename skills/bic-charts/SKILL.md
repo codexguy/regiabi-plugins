@@ -175,8 +175,8 @@ correction:
 Asking for these in `prompt` prose instead is the most expensive mistake available here: it
 routinely costs two or three extra generations, and each one is minutes of wall-clock.
 
-Other parameters worth knowing: `chart_type` (a preference, honored unless the data shape
-disqualifies it), `renderer` (a JavaScript or TypeScript project gets D3 without asking, because D3 is what
+Other parameters worth knowing: `chart_type` (the type the person named, honored unless the data shape
+disqualifies it; leave it unset when they only asked for a chart, and the engine chooses from what fits), `renderer` (a JavaScript or TypeScript project gets D3 without asking, because D3 is what
 `@bicharts/chart-host` draws), `width`/`height`, and
 `reasoning_mode: "1P"` when you want the cheapest, fastest pass.
 
@@ -539,7 +539,9 @@ are. The CLI returns at most 1,000 rows; the tool says so when it cut a result, 
 chart's grain.
 
 **4. Ask before choosing, then choose what answers the question.** `list_eligible_charts` on that
-data. The catalogue goes past the template's own charts, and these are the ones people describe
+data. Pass `chart_type` to `generate_chart` only for a type the person named; when they only asked for a chart, leave it
+unset and the engine chooses from what fits. A type the person described without naming it counts as named once you have
+matched it to the catalogue. The catalogue goes past the template's own charts, and these are the ones people describe
 without naming:
 
 | the request sounds like | ask for |
