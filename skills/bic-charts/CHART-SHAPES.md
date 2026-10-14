@@ -33,6 +33,7 @@ on the same picture, not a looser one.
 | Bivariate World Choropleth | 1 categorical, 2 continuous, geo: country-iso3/country-iso2/country-name | <=250 categories, needs 400x300 px | D3 | Best for two country-level measures that might disagree: wealth vs inequality, revenue vs margin, cases vs deaths - at least 24 countries and two measures that do not simply track each other |
 | Box plot | 1 continuous | needs 460x340 px | D3, Matplotlib, Plotly, Seaborn | Requires one continuous variable (plus optional category) |
 | Bubble chart | 3 continuous | needs 520x380 px | D3, Matplotlib, Plotly, Seaborn | Three continuous variables (x, y, size); one mark per row on continuous axes. If you want both axes grouped into bands with one aggregated bubble per cell, pick Binned bubble matrix instead |
+| Budget allocator | 1 categorical, 2 continuous | needs 560x380 px | D3 | One spend measure and one outcome by channel and period - monthly spend and signups for five marketing channels, budget and sales by region - with at least eight periods per channel |
 | Bullet chart | 1 continuous, a reference value | needs 220x120 px | D3, PLOTLY | Best for actual-vs-target KPIs with thresholds (revenue vs goal, SLA vs target) — a denser, clearer replacement for gauges |
 | Bump chart | 1 categorical, 1 continuous, 3+ time points | <=15 categories, needs 320x280 px | D3, PLOTLY | Best for leaderboard/position dynamics: how a handful of regions, products, or teams change rank quarter to quarter |
 | Calendar heatmap | 1 continuous, 60+ time points | needs 600x420 px | D3, Matplotlib, Plotly, Seaborn | Requires daily datetime data with associated numeric values; best for activity/contribution tracking over time |
@@ -46,6 +47,7 @@ on the same picture, not a looser one.
 | Clustered heatmap | 2 categorical, 1 continuous | <=50 categories, needs 320x320 px | Plotly | Requires two variables for matrix values |
 | Connected scatterplot | 2 continuous, 6+ time points | needs 300x300 px | D3, PLOTLY | Best for the joint trajectory of two related metrics over time (e.g. units vs revenue, unemployment vs inflation) where the path shape is the insight |
 | Custom small multiples | 1 categorical, 1 continuous | <=16 categories, needs 320x240 px | D3, Matplotlib, Plotly, Seaborn | Best when comparing patterns across categories |
+| Cutoff tuner | 1 continuous | needs 560x360 px | D3 | One row per case with a model score or rating and the actual yes/no outcome - churn, fraud, default, conversion - when the question is where to draw the line and what each choice costs |
 | Cycle plot | 1 continuous, 24+ time points | needs 320x280 px | D3, PLOTLY | Best for multi-year monthly/quarterly/weekly data where the question is seasonality vs trend ('is Q4 always highest, and is each Q4 growing?') |
 | Delta KPI | 2 continuous | needs 200x120 px | D3 | Two comparable measures, or one measure at two points in time - this period against last, actual against plan, after against before |
 | Dendrogram (tree diagram) | 2 categorical, 1 continuous | <=60 leaves, needs 320x240 px | D3, Plotly | Best for 2-4 hierarchy levels with ≤ ~80 leaves |

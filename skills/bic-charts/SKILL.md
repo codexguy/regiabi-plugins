@@ -314,14 +314,20 @@ export async function createGroup(sampleUrl, dotnet) {
     const group = createChartGroup(cols, rows);
     const off = group.onChange(sel => dotnet.invokeMethodAsync("OnSelectionChanged", sel.sourceId, [...sel.rows]));
     return {
-        async mount(el, spec) {                          // spec: { id, dir, height, respondsWith, geoKind }
+        async mount(el, spec) {                          // spec: { id, dir, height, respondsWith, geoKind, lasso }
             const code = await text(`${spec.dir}/chart.js`);   // TEXT: chart-host compiles it and injects d3
             if (spec.geoKind) await loadGeo(spec.geoKind);     // BEFORE the first render: render() is synchronous
             const opts = spec.respondsWith ? { respondsWith: spec.respondsWith } : {};
+            // The host lasso, for a chart whose generate_chart result carries capabilities.lasso (spec.lasso): a drag around
+            // marks selects the ones inside, through the group's own selection, so there is no handler to write. `capable` is
+            // the server's word for this chart; without it there is no lasso.
+            const lasso = spec.lasso
+                ? { capable: true, enabled: true, ...(spec.lasso.rowCap > 0 ? { rowCap: spec.lasso.rowCap } : {}) }
+                : null;
             const host = createChartHost(el, {
                 code, d3, geoKind: spec.geoKind || undefined,
                 data: group.memberPayload(spec.id, opts).payload,
-                options: { width: Math.floor(el.getBoundingClientRect().width), height: spec.height, ...theme(el) },
+                options: { width: Math.floor(el.getBoundingClientRect().width), height: spec.height, ...theme(el), ...(lasso ? { lasso } : {}) },
                 layoutPass: createLegendFitPass(),             // after every render: a legend slid clear of the plot, text brought inside the frame
             });
             host.render();
@@ -428,6 +434,10 @@ export async function createGroup(sampleUrl, dotnet) {
     [Parameter] public string? RespondsWith { get; set; }
     /// <summary>A map's geo.kind from the generate_chart result (e.g. "us-state-name").</summary>
     [Parameter] public string? GeoKind { get; set; }
+    /// <summary>True when the generate_chart result carries capabilities.lasso: a drag around marks selects the ones inside.</summary>
+    [Parameter] public bool Lasso { get; set; }
+    /// <summary>capabilities.lasso.rowCap from the same result, when it gives one: the most rows in view that still get a lasso.</summary>
+    [Parameter] public int? LassoRowCap { get; set; }
 
     ElementReference el;
     IJSObjectReference? chart;
@@ -437,7 +447,8 @@ export async function createGroup(sampleUrl, dotnet) {
         if (!firstRender) return;
         var group = await Group.Ready;
         chart = await group.InvokeAsync<IJSObjectReference>("mount", el,
-            new { id = Id, dir = Dir, height = Height, respondsWith = RespondsWith, geoKind = GeoKind });
+            new { id = Id, dir = Dir, height = Height, respondsWith = RespondsWith, geoKind = GeoKind,
+                  lasso = Lasso ? new { rowCap = LassoRowCap } : null });
     }
 
     /// <summary>A live restyle: merged into the chart's options and repainted.</summary>
@@ -490,6 +501,9 @@ Add `@using MyCharts.Components` to `_Imports.razor`, then on a page:
   `dropLines` says which applies: `ask` carries the question, `on`/`off` means the user already
   answered (the client asked them) and the generated component applies it. Keep the answer when
   the chart is regenerated; never ask again.
+- **Lasso** - when the result's `capabilities.lasso` is present, pass `Lasso="true"` (and `LassoRowCap` with its
+  `rowCap`): a drag around marks then selects the ones inside through the group's own selection, with no handler to
+  write. A chart whose result has none takes neither parameter and has no lasso.
 - **GeoKind** - the result's `geo.kind` (the text reply's `Geo:` line). Without it a map draws
   its marks over no land. `loadGeo` takes that geometry from chart-host itself, so the
   `data.geo.json` the tool also writes beside a map is the same shapes as a file: the page never
@@ -647,6 +661,11 @@ function CountryMap({ table, onPick }) {          // table = the live query resu
 - **`LAYOUT_PASS` is built once, at module scope, and needs `@bicharts/chart-host` 0.6.86 or later.** After
   every render it slides a legend clear of the plot and brings text that runs past the frame back inside; the
   chart component `generate_chart` writes does the same, and a new function on each render would rebuild the host.
+- **The result's `capabilities.lasso` means the chart takes chart-host's lasso (`@bicharts/chart-host` 0.6.84 or later).**
+  Pass `lasso: { capable: true, enabled: true }` in that chart's `options` (add `rowCap` when the result gives one), and a
+  drag around marks selects the ones inside through the same `onSelect` / `selects` a click uses: the gesture and the
+  selection are the host's, so there is no handler to write. The component `generate_chart` writes passes it already.
+  Without `capabilities.lasso` the chart has no lasso, and `lasso: { enabled: false }` turns it off.
 
 **Layout: a chart is never clipped or squashed.** Charts sit in cards, and a card is where they get cut off.
 - Render every chart inside `BicChartPanel`. It sizes the chart from its cell, never from the chart.
