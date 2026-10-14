@@ -42,7 +42,7 @@ those which defaulted, paying attention to credit score"* wants `LoanId`, `Defau
 `CreditScore`, filtered to six months.
 
 **A highlight is a COLUMN, not a styling note.** "Highlighting those which defaulted" means
-`Defaulted` travels as its own categorical column. There is no instruction channel that can colour
+`Defaulted` travels as its own categorical column. There is no instruction channel that can color
 rows the data does not distinguish.
 
 **GRAIN is a choice, and the default is usually wrong for these charts.** Almost every BI query
@@ -59,7 +59,7 @@ question, and nothing downstream will flag it. Ask yourself which you meant:
 
 **Aim with `CHART-SHAPES.md`** (beside this file). It lists every chart the engine can build and
 what each one needs — minimum columns by role, category ceilings, draw caps, viewport floors,
-which renderers can draw it. It is GENERATED from the chart catalogue, so it cannot drift from what
+which renderers can draw it. It is GENERATED from the chart catalog, so it cannot drift from what
 the engine will actually accept. Read the LIMITS column carefully: **the units differ** — a sankey
 is capped on EDGES and a chord on NODES, so `<=80 edges` is the tighter constraint on the same
 picture, not the looser one.
@@ -118,7 +118,7 @@ npm install -D esbuild
   `npm init -y` line again before retrying.
 - **`global.json`** pins the build to the newest installed .NET 10 SDK. Without it a machine that
   also has a newer or preview SDK builds with that one.
-- These blocks are written against `@bicharts/chart-host` 0.6.33 or later; every name they import
+- These blocks are written against `@bicharts/chart-host` 0.6.86 or later; every name they import
   is exported there.
 - npm 11 may warn that esbuild's postinstall is "not yet covered by allowScripts". The build doesn't
   need it: esbuild's platform binary arrives as an ordinary dependency, and the bundling target runs.
@@ -169,7 +169,7 @@ correction:
 | Parameter | Use it when |
 | --- | --- |
 | `rows_policy: "all"` | every source row must appear — a row-per-entity table, a point per location. Without it the engine may legitimately show a Top-N with an "Other" rollup. |
-| `required_columns: [...]` | a field must be visible because your app's interactions depend on it (e.g. the column you colour or filter by). |
+| `required_columns: [...]` | a field must be visible because your app's interactions depend on it (e.g. the column you color or filter by). |
 | `forbid_derived_columns: true` | your app owns the analytics; the chart is only the display. Stops per-capita / share-of-total / rank columns being added. |
 
 Asking for these in `prompt` prose instead is the most expensive mistake available here: it
@@ -189,7 +189,7 @@ engine picked, what was dropped), for a client that shows only the text. `engine
 the server reported what it picked; when it is `unavailable` the engine may have picked where a row
 reads `default`, so never tell the user it picked nothing. Most settings are
 passed only when the user has said them in their own words: a title, data labels, a legend position,
-a limit, a date grain, an overlay, a font. A few are worth one question when they matter and the user
+a limit, a date grain, an overlay, a font. Three are worth one question whenever the user
 hasn't said: `chart_style` (which family of charts to consider: the familiar forms or the other types), `level_of_detail` (how much of
 the data they want to see: every observation, a distribution, or one mark per category) and
 `culture` (their language and region), and, once the chart is drawn, the live options
@@ -226,9 +226,12 @@ Import the generated code as raw text and the sample payload as JSON:
 ```tsx
 import * as d3 from "d3";
 import { BicChart, BicChartGroup } from "@bicharts/chart-host/react";
+import { createLegendFitPass } from "@bicharts/chart-host/legend-fit";   // chart-host 0.6.86 or later
 import mapCode from "./charts/map/chart.js?raw";
 import tableCode from "./charts/table/chart.js?raw";
 import payload from "./charts/map/data.sample.json";
+
+const LAYOUT_PASS = createLegendFitPass();   // once, at module scope: a new function on each render rebuilds the host
 
 // data.sample.json rows are POSITIONAL arrays; the group wants row OBJECTS.
 const columns = payload.columns;
@@ -240,8 +243,8 @@ const rows = payload.rows.map(r =>
 
 ```tsx
 <BicChartGroup columns={columns} rows={rows} point={{ city: "City", state: "StateOrProvince" }}>
-  <BicChart id="map"   code={mapCode}   d3={d3} geoKind="north-america" respondsWith="highlight" />
-  <BicChart id="table" code={tableCode} d3={d3} />
+  <BicChart id="map"   code={mapCode}   d3={d3} geoKind="north-america" respondsWith="highlight" layoutPass={LAYOUT_PASS} />
+  <BicChart id="table" code={tableCode} d3={d3} layoutPass={LAYOUT_PASS} />
 </BicChartGroup>
 ```
 
@@ -277,9 +280,10 @@ Ctrl/Cmd/Shift-click adds or removes one mark, and a click on empty canvas clear
 ```js
 import * as d3base from "d3";
 import { assembleD3, createChartGroup, createChartHost, loadGeo } from "@bicharts/chart-host";
+import { createLegendFitPass } from "@bicharts/chart-host/legend-fit";
 
 const d3 = assembleD3(d3base);                           // + any plugins a chart's contract names
-const at = (path) => new URL(path, document.baseURI);   // honours <base href> on a sub-path host
+const at = (path) => new URL(path, document.baseURI);   // honors <base href> on a sub-path host
 async function text(path) {
     const r = await fetch(at(path));
     if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
@@ -318,6 +322,7 @@ export async function createGroup(sampleUrl, dotnet) {
                 code, d3, geoKind: spec.geoKind || undefined,
                 data: group.memberPayload(spec.id, opts).payload,
                 options: { width: Math.floor(el.getBoundingClientRect().width), height: spec.height, ...theme(el) },
+                layoutPass: createLegendFitPass(),             // after every render: a legend slid clear of the plot, text brought inside the frame
             });
             host.render();
             const member = group.attach(spec.id, host, opts);  // its clicks publish SOURCE rows
@@ -475,7 +480,7 @@ Add `@using MyCharts.Components` to `_Imports.razor`, then on a page:
   the tool resolved.
 - **Restyle** - a chart honours only the options its code reads, so a live restyle control has to
   set one of those. The generate result's `optionsRead` lists them for that chart, and its
-  `integrationContract` says what each does. The common ones: `palette` (a categorical colour
+  `integrationContract` says what each does. The common ones: `palette` (a categorical color
   list), `colorScaleLow`/`colorScaleHigh` (a sequential ramp's ends, what a choropleth reads),
   `maxMapPoints` (a point map's cap). An option not in `optionsRead` does nothing on that chart.
 - **Hover drop lines** - a 3D scatter can draw, on hover, a line from a point to each back wall of
@@ -498,7 +503,7 @@ Add `@using MyCharts.Components` to `_Imports.razor`, then on a page:
   `.bic-chart` its width in CSS (a block element in a sized column); the height is the
   `Height` parameter. A `display:none` container measures 0 and draws nothing.
 - **Light and dark** - `theme(el)` reads the background the chart sits on, so the chart follows the
-  PAGE. For a page that follows the reader, switch the page's own colours in CSS
+  PAGE. For a page that follows the reader, switch the page's own colors in CSS
   (`@media (prefers-color-scheme: dark) { ... }` on `body` or the chart's card) and the charts follow
   on the next `change` of the media query.
 
@@ -559,7 +564,7 @@ chart's grain.
 **4. Ask before choosing, then choose what answers the question.** `list_eligible_charts` on that
 data. Pass `chart_type` to `generate_chart` only for a type the person named; when they only asked for a chart, leave it
 unset and the engine chooses from what fits. A type the person described without naming it counts as named once you have
-matched it to the catalogue. The catalogue goes past the template's own charts, and these are the ones people describe
+matched it to the catalog. The catalog goes past the template's own charts, and these are the ones people describe
 without naming:
 
 | the request sounds like | ask for |
@@ -581,7 +586,7 @@ slider sets the rate anyway.
 queries at run time (`useSemanticModelQuery`), so the payload is rebuilt from live rows every time -
 never hand-built. **With `out_dir`, a D3 chart arrives with `chart.component.tsx` beside `chart.js`: a component that
 already does all of this** - the columns, the binding (`geo`, `point`, `destination`), the geometry kind, the
-d3 plugins the chart calls, and `rowsFromTable`, which maps a DAX result's `Table[Column]` and `[Measure]`
+d3 plugins the chart calls, the host's legend and frame fit (`layoutPass`), and `rowsFromTable`, which maps a DAX result's `Table[Column]` and `[Measure]`
 headers onto the chart's plain names. Use it as it is:
 
 ```tsx
@@ -608,6 +613,7 @@ host by hand instead - `generate_chart` returns `binding`; pass all three:
 ```tsx
 import * as d3 from "d3";
 import { BicChart, BicChartGroup } from "@bicharts/chart-host/react";
+import { createLegendFitPass } from "@bicharts/chart-host/legend-fit";
 import code from "@/charts/occupancy-map/chart.js?raw";
 // Saved from the generate_chart result: columns = data.columns, binding = binding, geoKind = geo.kind.
 import { columns, binding, geoKind } from "@/charts/occupancy-map/meta";
@@ -616,6 +622,8 @@ import { columns, binding, geoKind } from "@/charts/occupancy-map/meta";
 const RENAME = { "Geography[CountryIso3]": "CountryIso3", "Geography[CountryName]": "CountryName",
                  "[Average Daily Rate]": "AverageDailyRate", "[Occupancy %]": "Occupancy" };
 
+const LAYOUT_PASS = createLegendFitPass();        // once, at module scope: a new function on each render rebuilds the host
+
 function CountryMap({ table, onPick }) {          // table = the live query result
   const rows = table.rows.map(r => Object.fromEntries(
     table.columns.map((c, i) => [RENAME[c.name] ?? c.name, r[i]])));
@@ -623,7 +631,7 @@ function CountryMap({ table, onPick }) {          // table = the live query resu
     <BicChartGroup columns={columns} rows={rows}
                    geo={binding.geo} point={binding.point} destination={binding.destination}>
       <BicChart id="map" code={code} d3={d3} geoKind={geoKind}
-                options={{ width, height }}
+                options={{ width, height }} layoutPass={LAYOUT_PASS}
                 onSelect={idxs => onPick(idxs.length ? rows[idxs[0]].CountryIso3 : null)} />
     </BicChartGroup>
   );
@@ -636,6 +644,9 @@ function CountryMap({ table, onPick }) {          // table = the live query resu
   basemap but no join, so its `binding.geo` is null.
 - **`<BicChartGroup destination>` needs `@bicharts/chart-host` 0.6.50 or later.** Before it, a flow
   map's far end is not built.
+- **`LAYOUT_PASS` is built once, at module scope, and needs `@bicharts/chart-host` 0.6.86 or later.** After
+  every render it slides a legend clear of the plot and brings text that runs past the frame back inside; the
+  chart component `generate_chart` writes does the same, and a new function on each render would rebuild the host.
 
 **Layout: a chart is never clipped or squashed.** Charts sit in cards, and a card is where they get cut off.
 - Render every chart inside `BicChartPanel`. It sizes the chart from its cell, never from the chart.
@@ -708,7 +719,7 @@ Anything saved against a mark - a note, a flag - is keyed the same way, never by
 More the page gets from the same filters, each one line:
 - A link that opens the page as it was: `useBicUrlState()` in the page component (after its `useBicFilter` /
   `useBicControls` calls) keeps every filter and every chart's controls in `?view=`. `useBicView()` gives `save()` /
-  `restore(view)` for a saved view of your own (a user's favourite), and `token()` for a link.
+  `restore(view)` for a saved view of your own (a user's favorite), and `token()` for a link.
 - Linked hover: `useBicFilter("CountryIso3", { hover: true })` - hovering a mark lights the same key's marks on every
   chart bound to that filter (a glow, never a selection).
 - A filter that narrows a query to nothing: `<BicChartPanel ... onClearFilters={country.clear}>` says so with a Clear,
@@ -835,7 +846,7 @@ chart in a `BicChartPanel`), draws every chart together, and compares the stack 
 the line and the call to use instead; fix the ERRORs in the app's own files before deploying.
 You don't need to deploy to check a chart. The template's `validate:visual` checks `VegaVisual` factories; a
 RegiaBI chart's check is `check_chart` - don't list it there. `check_chart` and `check_app` check the charts and how
-the app uses them; the template's app-validation in the portal embed still applies. Then `npx tsc -b` and the tests. To test the page's behaviour,
+the app uses them; the template's app-validation in the portal embed still applies. Then `npx tsc -b` and the tests. To test the page's behavior,
 `@bicharts/chart-host/testing` has a reader's gestures - `clickMark`, `clickEmpty`, `selectedRows` - for the checks
 worth keeping: a second click on a mark clears its filter, and a page Clear clears the chart's marks. Deploying (`npx rayfin up`), on Rayfin 1.36.1:
 - Signed in? `npx rayfin login status` (a subcommand, not a `--status` flag); `npx rayfin login` if not.
