@@ -587,6 +587,9 @@ without naming:
 | movement, routes or flows between places | Origin-Destination Flow Map |
 | a forecast the reader steers with an assumption (a rate, a price change), against a goal | What-if projection - its sliders are drawn inside the chart; there is no slider to build |
 | how far apart the outcomes of several assumptions land | What-if scenarios |
+| every place drawn at the same size, because which are high or low matters more than where | World tile-grid cartogram (or US hex-tile cartogram for states) |
+| actual against a budget, plan or target, with the gap shown for each period or unit | Variance chart (budget vs actual) |
+| circling a group of points to see what sets them apart from the rest | Selection explainer - the lasso and the comparison are drawn inside the chart; put the other fields to compare in the same table |
 
 If the list doesn't offer what you expected, read its notes: it names a type refused on a count
 when your table is small, and it says when `name_filter` hid description matches.
