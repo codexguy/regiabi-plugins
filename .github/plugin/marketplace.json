@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "regiabi-charts",
-      "description": "Chart code that fits your data first try, as source you own: you pay to author it, never to run it.",
+      "description": "AI Data Components for Power BI, Excel, Fabric Apps and web: bivariate maps, what-if projections.",
       "version": "0.6.96",
       "source": "./"
     }
