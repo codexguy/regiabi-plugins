@@ -589,10 +589,15 @@ without naming:
 | how far apart the outcomes of several assumptions land | What-if scenarios |
 | every place drawn at the same size, because which are high or low matters more than where | World tile-grid cartogram (or US hex-tile cartogram for states) |
 | actual against a budget, plan or target, with the gap shown for each period or unit | Variance chart (budget vs actual) |
-| circling a group of points to see what sets them apart from the rest | Selection explainer - the lasso and the comparison are drawn inside the chart; put the other fields to compare in the same table |
+| circling a group of points to see what sets them apart from the rest | Selection explainer (a preview type) - the lasso and the comparison are drawn inside the chart; put the other fields to compare in the same table; on a page, give it `selects` so a circled group filters the page (step 6) |
 
 If the list doesn't offer what you expected, read its notes: it names a type refused on a count
 when your table is small, and it says when `name_filter` hid description matches.
+
+The Selection explainer is a preview type: the server offers it only where it's switched on, so it may be missing from the
+list even when the data fits. When `list_eligible_charts` doesn't list it for your data, tell the person it isn't available
+for this data right now, and ask how they want to go on. Don't silently draw a plain scatter in its place, and don't write the
+group statistics (what the circled points share, against the rest) into the app yourself: that comparison is the chart's.
 
 A chart that draws its own rate control needs the history and the goal, not the model's what-if parameter:
 leave the parameter's table (a `'Price Change'[Price Change]` column, say) out of its query. Grouping by it repeats
@@ -668,7 +673,8 @@ function CountryMap({ table, onPick }) {          // table = the live query resu
   Pass `lasso: { capable: true, enabled: true }` in that chart's `options` (add `rowCap` when the result gives one), and a
   drag around marks selects the ones inside through the same `onSelect` / `selects` a click uses: the gesture and the
   selection are the host's, so there is no handler to write. The component `generate_chart` writes passes it already.
-  Without `capabilities.lasso` the chart has no lasso, and `lasso: { enabled: false }` turns it off.
+  Without `capabilities.lasso` the chart has no lasso, and `lasso: { enabled: false }` turns it off. On a page, give that
+  chart `selects` so a circled group filters the rest of the page (step 6); without it the lasso only highlights inside it.
 
 **Layout: a chart is never clipped or squashed.** Charts sit in cards, and a card is where they get cut off.
 - Render every chart inside `BicChartPanel`. It sizes the chart from its cell, never from the chart.
@@ -716,6 +722,11 @@ const forecast = useSemanticModelQuery({ connection: "<alias>",
 
 What the library does, so the page doesn't:
 - A click sets the filter. The same click again, or a click on empty canvas, clears it. Ctrl-click adds a key.
+- A lasso is a selection too. On a chart whose result has `capabilities.lasso`, a drag around marks arrives through the same
+  `selects` a click uses, as MANY keys (`country.values`). So on a page, a circled group filters the page, just as a click
+  does: give the lasso chart `selects` and the other charts `filterBy` or `filterQuery` / `treatAs`. Wire it that way
+  whenever a lasso chart shares a page with other charts; the person doesn't have to ask for it. With no `selects` the lasso
+  only highlights inside its own chart, and nothing else on the page follows.
 - `country.clear()` (a button, a chip's ×) clears the filter AND the chart's marks.
 - New rows keep a selection whose key is still drawn and clear one whose key is gone - reported, never silent.
 - `country.value`, `country.values`, `country.keys`, `country.row` (the clicked row), `country.active` and
