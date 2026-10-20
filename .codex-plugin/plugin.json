@@ -14,7 +14,7 @@
   "keywords": ["charts", "data-visualization", "d3", "plotly", "mcp", "fabric", "rayfin", "power-bi", "dashboard"],
   "interface": {
     "displayName": "RegiaBI charts",
-    "shortDescription": "Chart code that fits your data first try",
+    "shortDescription": "AI Data Components for Power BI and more",
     "developerName": "CodeX Enterprises LLC",
     "category": "Coding",
     "capabilities": ["Read", "Write"],

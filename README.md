@@ -1,6 +1,10 @@
 # RegiaBI charts: an MCP server and agent plugin
 
-**Chart code that fits your data first try, as source you own: you pay to author it, never to run it.**
+> **Make Generative AI for Charts and Maps *Better*.**
+
+**AI Data Components for Power BI, Excel, Fabric Apps and the web: a bivariate map with its two-way key, a what-if
+projection with its controls inside the chart, and about 90 everyday chart types, with selection and cross-filtering
+already wired. The code is yours: you pay to author a chart, never to run it.**
 
 This repository packages the RegiaBI chart MCP server (`com.regiabi/chart-mcp`, published on npm as
 [`@bicharts/chart-mcp`](https://www.npmjs.com/package/@bicharts/chart-mcp)) and its agent skill as a one-command
