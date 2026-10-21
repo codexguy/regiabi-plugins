@@ -1,11 +1,11 @@
 {
   "name": "regiabi-charts",
-  "version": "0.6.99",
+  "version": "0.6.100",
   "description": "AI Data Components for Power BI, Excel, Fabric Apps and web: bivariate maps, what-if projections.",
   "mcpServers": {
     "bic-chart": {
       "command": "npx",
-      "args": ["-y", "@bicharts/chart-mcp@0.6.99"]
+      "args": ["-y", "@bicharts/chart-mcp@0.6.100"]
     }
   }
 }
