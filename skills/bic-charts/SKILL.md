@@ -589,6 +589,9 @@ without naming:
 | how far apart the outcomes of several assumptions land | What-if scenarios |
 | every place drawn at the same size, because which are high or low matters more than where | World tile-grid cartogram (or US hex-tile cartogram for states) |
 | actual against a budget, plan or target, with the gap shown for each period or unit | Variance chart (budget vs actual) |
+| that same actual-against-target comparison across many accounts or nested groups, read as a table with subtotals | Variance grid (a preview type) - it needs a category to group by; a date series alone is the Variance chart |
+| a table with one row per item and each value DRAWN (bars, dots or icons in the cells), so a reader can scan down a column | Table with embedded |
+| a table a reader sorts, hides columns in and opens a row's detail from, with plain values, chips or links | Interactive table (a preview type) |
 | circling a group of points to see what sets them apart from the rest | Selection explainer (a preview type) - the lasso and the comparison are drawn inside the chart; put the other fields to compare in the same table (which ones: below); on a page, give it `selects` so a circled group filters the page (step 6) |
 
 If the list doesn't offer what you expected, read its notes: it names a type refused on a count

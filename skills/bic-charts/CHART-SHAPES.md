@@ -15,6 +15,7 @@ on the same picture, not a looser one.
 | chart | needs | limits | renderers | good for |
 | --- | --- | --- | --- | --- |
 | 3D scatter plot | 3 continuous | needs 700x480 px | D3, Plotly | Three continuous measures whose joint structure is the question, on a tile large enough to turn. To read exact values off three or more measures, Pair plot (scatter matrix) and Parallel coordinates are both more precise |
+| Africa Choropleth | 1 categorical, geo: country-iso3/country-iso2/country-name | <=250 categories, needs 400x300 px | D3 | Best for country-level metrics when the countries are in Africa: sales, users, or population by country (keyed to country names or ISO codes) |
 | Animated bar chart | 1 categorical, 1 continuous, 5+ time points | <=40 categories, needs 360x300 px | D3 | Requires one categorical, one measure and a time column with 5 or more ordered periods; best for a leaderboard that changes over time (top products by year, teams by season, countries by decade) |
 | Animated treemap | 2 categorical, 1 continuous, 3+ time points | needs 800x560 px | D3 | Requires a 2-level categorical hierarchy plus an additive measure observed at 3 or more ordered time points |
 | Animated World (Bubbles) | 3+ time points, lat/lon | needs 400x320 px | D3 | Best for a measure per place observed at 3 or more ordered time points - revenue by country by year, openings by city by quarter, throughput by port by month - when the question is how each place changed rather than where it ranks |
@@ -22,6 +23,7 @@ on the same picture, not a looser one.
 | Annotated heatmap | 2 categorical, 1 continuous | <=20 categories, needs 320x280 px | D3, Matplotlib, Plotly, Seaborn | Requires two variables: categorical × categorical with values |
 | Arc diagram | 2 categorical | <=50 nodes, needs 380x240 px | D3 | Best for 5-50 nodes and a sparse-to-medium-density set of pairwise relationships |
 | Area chart | 1 continuous | needs 360x280 px | D3, Matplotlib, Plotly, Seaborn | Requires ordered categories or time with a continuous variable |
+| Asia Choropleth | 1 categorical, geo: country-iso3/country-iso2/country-name | <=250 categories, needs 400x300 px | D3 | Best for country-level metrics when the countries are in Asia: sales, users, or population by country (keyed to country names or ISO codes) |
 | Autocorrelation plot | 1 continuous, 20+ time points | needs 400x300 px | D3, Matplotlib, Plotly, Statsmodels | Requires a datetime series with one continuous variable |
 | Bar chart (horizontal) | - | needs 360x280 px | D3, Matplotlib, Plotly, Seaborn | Requires one categorical and one numeric variable |
 | Bar chart (vertical) | - | needs 600x420 px | D3, Matplotlib, Plotly, Seaborn | Requires one categorical and one numeric variable |
@@ -57,6 +59,7 @@ on the same picture, not a looser one.
 | ECDF plot | 1 continuous | needs 299x283 px | D3, Matplotlib, Plotly, Seaborn, Statsmodels | Requires one continuous variable |
 | Error band | 1 continuous | needs 360x240 px | D3 | Best for repeated measurements over time or over a continuous axis: latency trials, sensor readings, A/B metrics - anywhere the SPREAD matters as much as the average |
 | Error bar plot | 1 categorical, 1 continuous | needs 460x340 px | D3, Matplotlib, Plotly, Seaborn | Requires a category and a measure with a spread to show - repeated rows per category or a second measure holding the error |
+| Europe Choropleth | 1 categorical, geo: country-iso3/country-iso2/country-name | <=250 categories, needs 400x300 px | D3 | Best for country-level metrics when the countries are in Europe: sales, users, or population by country (keyed to country names or ISO codes) |
 | Event plot | 1 continuous | needs 400x300 px | D3, Matplotlib, Plotly, Seaborn | Requires a date or ordered value for each event, with an optional category that splits the events into lanes |
 | Flippable multi-card | 1 continuous | <=12 categories, needs 180x120 px | D3 | Best when more headline numbers compete for one tile than fit at once: several measures side by side, or one or two measures paged through a small category, with the details on hover |
 | Funnel chart | 1 continuous | <=12 categories, needs 460x340 px | D3, PLOTLY | Best for conversion/attrition pipelines: signup funnels, sales pipeline stages, checkout flow drop-off |
@@ -69,6 +72,7 @@ on the same picture, not a looser one.
 | Horizon chart | 1 categorical, 1 continuous, 12+ time points | needs 800x560 px | D3, Matplotlib, Plotly | Best for dense time series dashboards |
 | Horizontal/vertical span plot | 1 categorical, 2 continuous | needs 400x300 px | D3, Matplotlib, Plotly, Seaborn | Requires a category and two numeric bounds per category - a low and a high, or a start and an end - on one shared scale |
 | Icicle plot | 2 categorical, 1 continuous | <=60 leaves, needs 320x240 px | D3, Plotly | Best for 2-4 levels of hierarchy with ≤ ~50 leaves; an alternative to a sunburst when horizontal/vertical scanning is preferred |
+| Interactive table | - | needs 320x200 px | D3 | Any set of rows and columns that a reader wants to scan, sort and look into - an account list, a roster, a task or ticket list, a ledger, results with a status and a score; long lists a chart would crowd |
 | Joint plot | 2 continuous | needs 360x280 px | D3, Matplotlib, Plotly, Seaborn | Requires two continuous variables |
 | KDE plot (1D & 2D) | 1 continuous | needs 400x300 px | D3, Matplotlib, Plotly, Seaborn, Statsmodels | Requires one continuous variable (or two for 2D KDE) |
 | Lag plot (scatter of value vs lag) | 1 continuous, 20+ time points | needs 280x280 px | D3, Matplotlib, Plotly, Seaborn, Statsmodels | Requires a datetime series with one continuous variable |
@@ -82,6 +86,8 @@ on the same picture, not a looser one.
 | Network diagram | 2 categorical | <=150 categories, <=80 edges, needs 320x280 px | D3, Matplotlib | Requires node and edge data (source-target pairs); best for relationship, dependency, or social network visualization |
 | Normalized stacked bar chart | 2 categorical, 1 continuous | needs 600x420 px | D3 | Best with two categoricals and one additive measure when the question is what the composition is rather than how big the total is |
 | North America (Bubbles) | lat/lon | needs 400x300 px | D3 | Best for point-located data with latitude and longitude columns: stores, cities, facilities, or events across North America, with a measure for bubble size and optionally a second measure or category for color |
+| North America Choropleth | 1 categorical, geo: country-iso3/country-iso2/country-name | <=250 categories, needs 400x300 px | D3 | Best for country-level metrics when the countries are in North America: sales, users, or population by country (keyed to country names or ISO codes) |
+| Oceania Choropleth | 1 categorical, geo: country-iso3/country-iso2/country-name | <=250 categories, needs 400x300 px | D3 | Best for country-level metrics when the countries are in Oceania: sales, users, or population by country (keyed to country names or ISO codes) |
 | Origin-Destination Flow Map | lat/lon | needs 400x300 px | D3 | Best for movement between places: flight routes, shipping and trade lanes, migration, commutes or transfers, where each row names where something started and where it ended plus a measure of how much moved |
 | Packed circles | 2 categorical, 1 continuous | needs 280x280 px | D3 | Best with one numeric measure plus 1-2 categorical groupings producing 20-150 leaves |
 | Pair plot (scatter matrix) | 3 continuous | needs 480x400 px | D3, Matplotlib, Plotly, Seaborn | Requires at least three continuous variables |
@@ -102,6 +108,7 @@ on the same picture, not a looser one.
 | Seasonal decomposition | 1 continuous, 24+ time points | needs 320x360 px | Matplotlib, Plotly, Statsmodels | Requires a datetime series with one continuous variable and at least two full seasonal cycles |
 | Selection explainer | 2 continuous | needs 560x360 px | D3 | Two measures over thirty or more rows that also carry other fields - region, plan, tenure, size - when the question is 'what do these points have in common?' |
 | Slope chart | 1 categorical, 1 continuous, 2+ time points | <=40 categories, needs 460x340 px | D3, PLOTLY | Best for two-period change across many categories: YoY by region/segment, before/after comparisons, ranking shifts between two snapshots |
+| South America Choropleth | 1 categorical, geo: country-iso3/country-iso2/country-name | <=250 categories, needs 400x300 px | D3 | Best for country-level metrics when the countries are in South America: sales, users, or population by country (keyed to country names or ISO codes) |
 | Spiral plot | 1 continuous, 12+ time points | needs 320x320 px | D3, PLOTLY | Best for long, finely-grained, strongly periodic series (years of daily data) where the cyclic pattern is the story |
 | Stacked area chart | 1 categorical, 1 continuous | needs 460x340 px | D3, Matplotlib, Plotly | Requires ordered categories with multiple continuous series |
 | Stacked bar chart | 2 categorical, 1 continuous | needs 700x480 px | D3, Matplotlib, Plotly, Seaborn | Requires one categorical, one subcategory, and one numeric variable |
@@ -110,7 +117,7 @@ on the same picture, not a looser one.
 | Streamgraph | 1 categorical, 1 continuous, 8+ time points | needs 520x380 px | D3, Plotly | Best with 3-12 categorical series and a continuous time axis with at least 15-30 evenly-spaced points |
 | Strip plot | 1 continuous | needs 700x480 px | D3, Matplotlib, Plotly, Seaborn | Requires one categorical and one continuous variable; jitter on the category axis prevents overplot at the same value |
 | Sunburst chart | 2 categorical, 1 continuous | needs 400x300 px | D3, Matplotlib, Plotly | Requires hierarchical categorical data |
-| Tabular with embedded | 1 categorical, 1 continuous | <=40 categories, needs 420x200 px | D3 | Best for a small set of items compared across several attributes at once (a forecast/roster/scorecard table) |
+| Table with embedded | 1 categorical, 1 continuous | <=40 categories, needs 420x200 px | D3 | Best for a small set of items compared across several attributes at once (a forecast/roster/scorecard table) |
 | Ternary plot | 3 continuous | needs 320x320 px | D3 | Three measures that add up to the same total on every row - product mix, budget allocation, vote share, channel split |
 | Thermometer | 1 continuous, a bounded scale | needs 90x220 px | D3 | A value against a ceiling the data states, overall or one tube per category, in a tall narrow tile - a sidebar rail or a column of KPIs down a page edge; a constant value is a valid reading |
 | Time series plot | 1 continuous | needs 460x340 px | D3, Plotly | Requires a datetime axis with at least one continuous variable |
@@ -120,6 +127,7 @@ on the same picture, not a looser one.
 | USA Choropleth (by state) | 1 categorical, geo: us-state-code/us-state-name | <=56 categories, needs 400x300 px | D3 | Best for state-level US metrics: sales, users, or population by state, any measure that varies by US state (keyed to state names or USPS codes) |
 | USA Choropleth (by ZIP-3) | 1 categorical, geo: us-zip5 | <=42000 categories, needs 400x300 px | D3 | Best for regional US ZIP analysis: metrics by 3-digit ZIP prefix area, any measure that varies across US postal regions (keyed to 5-digit ZIP codes, grouped to their 3-digit prefix) |
 | Variance chart (budget vs actual) | 1 categorical, 2 continuous, a measure naming itself budget/plan/target | <=60 categories, needs 360x240 px | D3 | One category or period column plus two measures where one names itself the reference - Revenue and Revenue Budget, Cost and Cost Plan, Attained and Quota; finance reporting, budget reviews, plan attainment |
+| Variance grid | 1 categorical, 2 continuous, a measure naming itself budget/plan/target | needs 320x200 px | D3 | One or more category columns plus two measures where one names itself the reference - Revenue and Revenue Budget, Cost and Cost Plan, Attained and Quota; a P&L, a budget review, plan attainment by unit; many rows or nested groups that a chart would crowd |
 | Violin plot | 1 continuous | needs 280x280 px | D3, Matplotlib, Plotly, Seaborn | Requires one continuous variable (plus optional category) |
 | Voronoi treemap | 2 categorical, 1 continuous | <=50 cells, needs 320x280 px | D3 | Best for 5-30 categories with one non-negative measure; an alternative to a plain treemap when the organic look is desired |
 | Waffle chart | 1 categorical, 1 continuous | <=6 categories, needs 520x380 px | D3, Matplotlib, Plotly | Best for showing part-to-whole relationships with small number of categories; more accurate than pie charts |
