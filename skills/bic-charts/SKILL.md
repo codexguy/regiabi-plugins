@@ -589,7 +589,7 @@ without naming:
 | how far apart the outcomes of several assumptions land | What-if scenarios |
 | every place drawn at the same size, because which are high or low matters more than where | World tile-grid cartogram (or US hex-tile cartogram for states) |
 | actual against a budget, plan or target, with the gap shown for each period or unit | Variance chart (budget vs actual) |
-| circling a group of points to see what sets them apart from the rest | Selection explainer (a preview type) - the lasso and the comparison are drawn inside the chart; put the other fields to compare in the same table; on a page, give it `selects` so a circled group filters the page (step 6) |
+| circling a group of points to see what sets them apart from the rest | Selection explainer (a preview type) - the lasso and the comparison are drawn inside the chart; put the other fields to compare in the same table (which ones: below); on a page, give it `selects` so a circled group filters the page (step 6) |
 
 If the list doesn't offer what you expected, read its notes: it names a type refused on a count
 when your table is small, and it says when `name_filter` hid description matches.
@@ -598,6 +598,11 @@ The Selection explainer is a preview type: the server offers it only where it's 
 list even when the data fits. When `list_eligible_charts` doesn't list it for your data, tell the person it isn't available
 for this data right now, and ask how they want to go on. Don't silently draw a plain scatter in its place, and don't write the
 group statistics (what the circled points share, against the rest) into the app yourself: that comparison is the chart's.
+
+Which other fields to put in its query: 4 to 8 a reader would ask about that can differ across the plot - segments and
+categories (region, main channel), mix shares (online, retail, partner), size (population, a revenue band), and one or two
+measures at most. Leave out row keys, the axes and fields that just track an axis (revenue beside marketing spend): the
+panel tests every field, and each extra field makes the test for every field stricter.
 
 A chart that draws its own rate control needs the history and the goal, not the model's what-if parameter:
 leave the parameter's table (a `'Price Change'[Price Change]` column, say) out of its query. Grouping by it repeats
