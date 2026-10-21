@@ -1,7 +1,7 @@
 {
   "name": "regiabi-charts",
   "displayName": "RegiaBI charts",
-  "version": "0.6.98",
+  "version": "0.6.99",
   "description": "AI Data Components for Power BI, Excel, Fabric Apps and web: bivariate maps, what-if projections.",
   "author": {
     "name": "CodeX Enterprises LLC",
@@ -19,7 +19,7 @@
   "mcpServers": {
     "bic-chart": {
       "command": "npx",
-      "args": ["-y", "@bicharts/chart-mcp@0.6.98"],
+      "args": ["-y", "@bicharts/chart-mcp@0.6.99"],
       "env": {
         "BIC_LICENSEE": "${user_config.licensee}",
         "BIC_LICENSE_KEY": "${user_config.license_key}",
