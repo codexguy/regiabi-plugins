@@ -553,9 +553,21 @@ overwrites a file, and its reply ends with a worked example. Building notes on m
 data service is on (the notes recipe below, step a), run it again with `features: ["notes", "scenarios"]`: it writes
 those files finished.
 
+**The model's name is the `connection`.** Connect the semantic model the way the template's AGENTS.md says - before or
+after `setup_fabric_app`, whose reply names it either way. On the template's current layout the model is a Rayfin
+connector: `npx rayfin connector search "<model name>" --all-workspaces --type fabric-semanticmodel --json`, then the
+`npx rayfin connector add --type fabric-semanticmodel --name <name> --workspace-id <id> --item-id <id>` it prints (ids from
+the search, never guessed); the connector's name in `rayfin/rayfin.yml` is what `useSemanticModelQuery({ connection })`
+takes. On the template's older layout (a `fabric.yaml`, `@microsoft/fabric-app-data`) it is the model's alias in
+`fabric.yaml`. `query_semantic_model` and `suggest_charts` read it from whichever file the project has; pass `alias` only
+when the project declares more than one.
+
 **1. Pull each chart's rows at the chart's GRAIN, with a query written for that chart.** One row per
-country for a country map, one per route for a flow map, one per month for a trend. The template's
-writing-phase command is `npx fabric-app-data query <alias> --query '<DAX>'`. Don't pull a fact
+country for a country map, one per route for a flow map, one per month for a trend. The template's own
+command runs a `.dax` file through the connector: `npx fabric-app-semantic-model-tools run-dax-query --dax <file.dax>
+--alias <connector>` (on its older layout, `npx fabric-app-data query <alias> --query '<DAX>'`).
+`query_semantic_model` runs the query through that same connector and the project's own sign-in, so a query it returned
+has passed the template's check: don't run it again with `run-dax-query`. Don't pull a fact
 table and aggregate it in the browser: the Execute Queries API refuses a response over 15 MB, and a
 column repeated on every fact row (a country's population on each sale) sums to nonsense.
 
@@ -573,12 +585,14 @@ name. Pass the model's metadata as you rename: `isMeasure`, `format` and `descri
 Power BI visual gets for free. In `INFO.VIEW.COLUMNS()` a column's name is `[Name]`, not `[Column]`.
 
 **Steps 1-3 are one call: `query_semantic_model`.** Give it the chart's DAX (`dax`, or a `.dax` file) and a
-`name`; it runs the query through the project's own `fabric-app-data` CLI, renames the headers (dropping the
+`name`; it runs the query through the project's own tooling - the model's Rayfin connector (through
+`@microsoft/fabric-app-semantic-model-tools`, else the Rayfin CLI), or on the older layout the `fabric-app-data` CLI - so
+it signs in and gets the reply the app will get. It renames the headers (dropping the
 table and any symbols: `[Occupancy %]` becomes `Occupancy`), saves every row to `.bic/data/<name>.csv`,
 reads each column's role, format and description from the model (`INFO.VIEW.MEASURES()` / `INFO.VIEW.COLUMNS()`),
 and profiles the result. Its reply ends with the arguments for the next two calls - `csv_path`, `measures`,
 `dimensions`, `formats`, `descriptions` - so pass them to `list_eligible_charts` and `generate_chart` as they
-are. The CLI returns at most 1,000 rows; the tool says so when it cut a result, and the fix is a query at the
+are. It keeps at most 1,000 rows of a query; the tool says so when it cut a result, and the fix is a query at the
 chart's grain.
 
 **4. Ask before choosing, then choose what answers the question.** `list_eligible_charts` on that
@@ -635,7 +649,8 @@ import { BicChartPanel } from "@/components/bic-chart-panel";
 import { useBicChartOptions } from "@/lib/bic-chart-options";
 import QUERY from "@/queries/overview/occupancy-map.dax?raw";   // the template's rule: DAX lives in .dax files
 
-const result = useSemanticModelQuery({ connection: "<alias>", query: QUERY });  // the DAX it was generated on
+// connection: the model's connector name in rayfin/rayfin.yml (fabric.yaml's alias on the older layout)
+const result = useSemanticModelQuery({ connection: "<connector name>", query: QUERY });  // the DAX it was generated on
 const options = useBicChartOptions();
 const country = useBicFilter("CountryIso3", { label: "Country", display: "CountryName" });   // step 6
 <BicChartPanel result={result}>
@@ -732,7 +747,7 @@ import FORECAST_DAX from "@/queries/overview/bookings-forecast.dax?raw";
 const country = useBicFilter("CountryIso3", { label: "Country", display: "CountryName" });
 const route = useBicFilter(["OriginCode", "DestinationCode"],
                           { label: "Route", display: ["OriginName", "DestinationName"] });
-const forecast = useSemanticModelQuery({ connection: "<alias>",
+const forecast = useSemanticModelQuery({ connection: "<connector name>",
   query: filterQuery(FORECAST_DAX, treatAs(country, "Geography[CountryIso3]")) });
 
 <BicFilterChips />                                   {/* "Country: Japan ×" - what's filtered, and its clear */}
@@ -799,8 +814,10 @@ npx rayfin init --services auth,data --auth-methods fabric --dialect mssql --ove
 Each flag is needed: without `--overwrite` it prints "Initialization cancelled" and exits 0 with no
 reason; without `--project-name` (pass the `id:` already in `rayfin/rayfin.yml`, so nothing is renamed)
 it stops with "--project-name is required in non-interactive mode". It rewrites `rayfin/rayfin.yml`
-and `.gitignore`, so `git diff` both and put back what's yours (on 1.36.1 it dropped the template's
-`src/fabric.generated.ts` line from `.gitignore`). It writes `rayfin/tsconfig.json` - keep its
+and `.gitignore`, so `git diff` both and put back what's yours: on the template's connector layout that is the
+`connectors:` list in `rayfin/rayfin.yml` (put it back, or run the same `npx rayfin connector add` again - without it
+the app and `query_semantic_model` have no model) and the template's `.gitignore` lines; on the older layout, on 1.36.1, it
+dropped the `src/fabric.generated.ts` line. It writes `rayfin/tsconfig.json` - keep its
 `outDir`, `.temp/compiled`, which is where the deploy reads the entities from - and no entities. On 1.36.2 it
 writes no `rayfin/data/schema.ts` either: don't write one by hand - `setup_fabric_app` with `features` (step c) writes it
 when `rayfin/rayfin.yml` shows the data service on.
@@ -809,9 +826,11 @@ when `rayfin/rayfin.yml` shows the data service on.
 - `rayfin/tsconfig.json`, in `compilerOptions`: `"tsBuildInfoFile": ".temp/tsconfig.tsbuildinfo"` and
   `"allowImportingTsExtensions": false` (it inherits both from the root: TS6377 and TS5096 otherwise).
 - the root `tsconfig.json`: `"references": [{ "path": "./rayfin" }]`.
-- type the client with your schema: `RayfinClient<AppSchema>` in `src/lib/rayfin-client.ts`
-  (`import type { AppSchema } from "../../rayfin/data/schema";`) and in the constructor of
-  `src/services/rayfin-auth.service.ts` (TS2345 otherwise).
+- type the client with your schema (`import type { AppSchema } from "../../rayfin/data/schema";`): in
+  `src/lib/rayfin-client.ts`, on the connector layout, `AppSchema` in place of `EntitySchema` as the first type argument
+  of `ConnectorsRayfinClient<EntitySchema, FunctionsSchema, AppConnectorsSchema>` (the older layout's file has
+  `RayfinClient<AppSchema>`); and `RayfinClient<AppSchema>` in the constructor of `src/services/rayfin-auth.service.ts`
+  (TS2345 otherwise).
 
 Check with `npx tsc -b`; a bare `tsc --noEmit` reports TS6305 until the `rayfin/` project is built. If a
 TS2345 names two copies of `rayfin-auth`, something installed only some Rayfin packages: run
