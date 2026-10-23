@@ -180,6 +180,12 @@ disqualifies it; leave it unset when they only asked for a chart, and the engine
 `@bicharts/chart-host` draws), `width`/`height`, and
 `reasoning_mode: "1P"` when you want the cheapest, fastest pass.
 
+**Check a named request before generating it.** When the person's request names a chart type or something
+specific (a date grain, a limit, an overlay, a column that must show), pass the same arguments to
+`check_request` first. It says, in the service's own words, which asks this data can't honor and why,
+with chart types that fit when the type itself is denied; tell the person what it denies and why rather
+than generating around it. It spends no generation credits and is metered like `list_eligible_charts`.
+
 **Settings are the user's to answer, not yours to guess.** Every `generate_chart` result carries a
 `structuredContent.settings` block: `applied` lists each setting that took effect and whose choice it
 was (`user`, `app`, `default`, `server-roll`, `from-prompt`), `askable` names the ones still open to
@@ -590,12 +596,14 @@ without naming:
 | every place drawn at the same size, because which are high or low matters more than where | World tile-grid cartogram (or US hex-tile cartogram for states) |
 | actual against a budget, plan or target, with the gap shown for each period or unit | Variance chart (budget vs actual) |
 | that same actual-against-target comparison across many accounts or nested groups, read as a table with subtotals | Variance grid (a preview type) - it needs a category to group by; a date series alone is the Variance chart |
-| a table with one row per item and each value DRAWN (bars, dots or icons in the cells), so a reader can scan down a column | Table with embedded |
-| a table a reader sorts, hides columns in and opens a row's detail from, with plain values, chips or links | Interactive table (a preview type) |
+| a table with one row per item and each value DRAWN (bars, dots or icons in the cells), compact, for scanning down a column and nothing more | Table with embedded |
+| a table a reader WORKS with: sorts, drags column widths, copies cells out, hides columns, scrolls a wide table sideways with frozen columns or rows, opens a row's detail; plain values by default, and where the request asks, data bars, chips, icons, or one value compared with several others as bars (this week against its averages) | Interactive table (a preview type) - name the cells to draw in `prompt`; widths, sort and hidden columns are the reader's, kept through the host's view state |
 | circling a group of points to see what sets them apart from the rest | Selection explainer (a preview type) - the lasso and the comparison are drawn inside the chart; put the other fields to compare in the same table (which ones: below); on a page, give it `selects` so a circled group filters the page (step 6) |
 
 If the list doesn't offer what you expected, read its notes: it names a type refused on a count
 when your table is small, and it says when `name_filter` hid description matches.
+
+The Interactive table and the Variance grid are preview types too, so either may be missing from the list. When the person asked for one and it isn't listed, say so and ask how to go on; don't build a table by hand in its place.
 
 The Selection explainer is a preview type: the server offers it only where it's switched on, so it may be missing from the
 list even when the data fits. When `list_eligible_charts` doesn't list it for your data, tell the person it isn't available
@@ -636,6 +644,11 @@ const country = useBicFilter("CountryIso3", { label: "Country", display: "Countr
   )}
 </BicChartPanel>
 ```
+
+**A reader's view outlives the page only if you keep it.** What a reader sets inside a chart - an Interactive table's sort,
+column widths and hidden columns, a 3D camera, an expanded row - lives while the chart is mounted and is gone on reload.
+Pass `rememberAs="<a key per chart>"` to keep it in that browser, or `viewState={{ load, save }}` to keep it per signed-in
+person on your server (a plain JSON bag). Hand-hosting `BicChart`, pass the same `viewState` prop.
 
 It is rewritten with the chart on every generation, so keep app logic outside it. What it does, if you
 host by hand instead - `generate_chart` returns `binding`; pass all three:
@@ -818,8 +831,9 @@ never rewrites them:
   chart's card (a card has a fixed height and `overflow-hidden`, and clips it). The reader's text is cleared only once
   the save succeeds; a failure is shown with the text kept.
 
-*d. Badges on the marks: pass `annotations`, never measure the chart.* The host draws each badge on its key's mark
-after every render and keeps it there through filters, re-queries and zooms; it never reads a row position. A route is
+*d. Badges on the marks: pass `annotations`, never measure the chart.* The host draws each badge on its key's mark (on a
+table row, just after the row's label; on a chart type that asks for it, such as a tile map, a small dot inside the
+tile's top-right corner with the `label` and `title` in its tooltip) after every render and keeps it there through filters, re-queries and zooms; it never reads a row position. A route is
 keyed by BOTH of its ends with `where` - no key column to add, no query to change and no chart to regenerate:
 
 ```tsx
