@@ -1,6 +1,6 @@
 ---
 name: bic-charts
-description: Build a web app or dashboard containing BIC-generated charts — a bubble map, a table with in-cell bars, linked cross-filtering. Use whenever the bic-chart MCP tools are available and the task is "put a chart / dashboard in this app".
+description: Build a web app or dashboard containing BIC-generated charts, maps, tables and app widgets — a bubble map, a table with in-cell bars, a table readers work with and keep their own way, a what-if widget, linked cross-filtering. Use whenever the bic-chart MCP tools are available and the task is "put a chart, map, table, widget or dashboard in this app".
 ---
 
 # Building an app with BIC charts
@@ -8,6 +8,11 @@ description: Build a web app or dashboard containing BIC-generated charts — a 
 The golden path, end to end. Following it costs a handful of tool calls; deriving it from
 first principles costs about thirty, and the places people lose time are all called out
 below because they were all measured.
+
+**Not only charts.** Maps, tables a reader works with and app widgets (KPI cards, what-if controls, card decks) are
+built here like any chart: `list_eligible_charts` offers them and `generate_chart` writes each with its component.
+Asked for one, list first, before hand-building it or reaching for another grid, map or widget library; step 5 says
+how a generated table's component keeps the reader's view.
 
 **The mental model.** A BIC chart is *generated source you own* — a plain
 `render(container, data, options)` function you commit to your repo. There is no API key at
