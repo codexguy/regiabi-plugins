@@ -292,8 +292,11 @@ Ctrl/Cmd/Shift-click adds or removes one mark, and a click on empty canvas clear
 import * as d3base from "d3";
 import { assembleD3, createChartGroup, createChartHost, loadGeo } from "@bicharts/chart-host";
 import { createLegendFitPass } from "@bicharts/chart-host/legend-fit";
+import { hostLinkServices } from "@bicharts/chart-host";
 
 const d3 = assembleD3(d3base);                           // + any plugins a chart's contract names
+// A chart opens a link and copies only through these (a new tab, the clipboard): built once, for every chart.
+const links = hostLinkServices(u => window.open(u, "_blank", "noopener,noreferrer"), navigator.clipboard);
 const at = (path) => new URL(path, document.baseURI);   // honors <base href> on a sub-path host
 async function text(path) {
     const r = await fetch(at(path));
@@ -338,7 +341,7 @@ export async function createGroup(sampleUrl, dotnet) {
             const host = createChartHost(el, {
                 code, d3, geoKind: spec.geoKind || undefined,
                 data: group.memberPayload(spec.id, opts).payload,
-                options: { width: Math.floor(el.getBoundingClientRect().width), height: spec.height, ...theme(el), ...(lasso ? { lasso } : {}) },
+                options: { width: Math.floor(el.getBoundingClientRect().width), height: spec.height, ...links, ...theme(el), ...(lasso ? { lasso } : {}) },
                 layoutPass: createLegendFitPass(),             // after every render: a legend slid clear of the plot, text brought inside the frame
             });
             host.render();
@@ -675,6 +678,7 @@ host by hand instead - `generate_chart` returns `binding`; pass all three:
 
 ```tsx
 import * as d3 from "d3";
+import { hostLinkServices } from "@bicharts/chart-host";
 import { BicChart, BicChartGroup } from "@bicharts/chart-host/react";
 import { createLegendFitPass } from "@bicharts/chart-host/legend-fit";
 import code from "@/charts/occupancy-map/chart.js?raw";
@@ -686,6 +690,8 @@ const RENAME = { "Geography[CountryIso3]": "CountryIso3", "Geography[CountryName
                  "[Average Daily Rate]": "AverageDailyRate", "[Occupancy %]": "Occupancy" };
 
 const LAYOUT_PASS = createLegendFitPass();        // once, at module scope: a new function on each render rebuilds the host
+// A chart opens a link and copies only through these (a new tab, the clipboard). Once, at module scope, too.
+const LINKS = hostLinkServices(u => window.open(u, "_blank", "noopener,noreferrer"), navigator.clipboard);
 
 function CountryMap({ table, onPick }) {          // table = the live query result
   const rows = table.rows.map(r => Object.fromEntries(
@@ -694,7 +700,7 @@ function CountryMap({ table, onPick }) {          // table = the live query resu
     <BicChartGroup columns={columns} rows={rows}
                    geo={binding.geo} point={binding.point} destination={binding.destination}>
       <BicChart id="map" code={code} d3={d3} geoKind={geoKind}
-                options={{ width, height }} layoutPass={LAYOUT_PASS}
+                options={{ width, height, ...LINKS }} layoutPass={LAYOUT_PASS}
                 onSelect={idxs => onPick(idxs.length ? rows[idxs[0]].CountryIso3 : null)} />
     </BicChartGroup>
   );
@@ -710,6 +716,9 @@ function CountryMap({ table, onPick }) {          // table = the live query resu
 - **`LAYOUT_PASS` is built once, at module scope, and needs `@bicharts/chart-host` 0.6.86 or later.** After
   every render it slides a legend clear of the plot and brings text that runs past the frame back inside; the
   chart component `generate_chart` writes does the same, and a new function on each render would rebuild the host.
+- **`LINKS` (`hostLinkServices`, `@bicharts/chart-host` 0.6.103 or later) is how a chart opens a link and copies.** A
+  table's link column draws as a link only where `openUrl` exists; only http(s) and mailto open, and nothing is logged.
+  The chart component passes the same; inside a sandboxed iframe the new tab needs `allow-popups`.
 - **The result's `capabilities.lasso` means the chart takes chart-host's lasso (`@bicharts/chart-host` 0.6.84 or later).**
   Pass `lasso: { capable: true, enabled: true }` in that chart's `options` (add `rowCap` when the result gives one), and a
   drag around marks selects the ones inside through the same `onSelect` / `selects` a click uses: the gesture and the
