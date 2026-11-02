@@ -215,6 +215,13 @@ the next `generate_chart`, or, for a live setting, an option in the emitted comp
 unattended run), ask nothing, use the defaults, and tell the user which settings were assumed from
 `settings.applied`. `get_guide` with topic `settings` lists every row with its options.
 
+**Your final message keeps what the engine chose apart from what falls short.** Under what the engine chose, list its
+choices (the `settings.applied` rows it picked - `default`, `server-roll` - and `engineChoices`) and each chart's limits
+(a width it won't draw below, so the layout stacks it; a row cap; a type a count ruled out). Those are choices and
+limits, not gaps. Keep "falls short" (or however you head it) for an ask the app doesn't meet, each with why and what
+would meet it. A column printed as text is the engine's choice unless the person asked for every column drawn; then
+it falls short, and says so.
+
 **Generation takes minutes.** Fire the calls for independent charts **in parallel** rather
 than in sequence — it is the difference between ~4 minutes and ~12.
 
@@ -579,6 +586,21 @@ has passed the template's check: don't run it again with `run-dax-query`. Don't 
 table and aggregate it in the browser: the Execute Queries API refuses a response over 15 MB, and a
 column repeated on every fact row (a country's population on each sale) sums to nonsense.
 
+**A "vs" measure is blank where there's nothing to compare against.** `[Goal Attainment %] - 1` is never blank:
+BLANK() - 1 is -1, so SUMMARIZECOLUMNS keeps every row, a place with no goal reads -100%, and on a symmetric diverging
+scale that one mark sets the span and every other draws near-neutral. The same goes for `1 - [Share]` and for
+`[Bookings] - [Bookings Goal]` (with no goal, the whole value reads as the gap). Write each so it is blank where its base
+is:
+
+```dax
+"Vs Goal %", DIVIDE([Bookings] - [Bookings Goal], [Bookings Goal])      -- blank where there is no goal
+"Vs Goal %", IF(NOT ISBLANK([Goal Attainment %]), [Goal Attainment %] - 1)
+```
+
+`query_semantic_model` flags the never-blank forms in the query it runs (and a column at exactly -1 where its base is
+blank), `check_app` flags them in the app's `.dax` files, and `check_chart` warns when one value sets a diverging color
+scale's span.
+
 **2. Profile and generate from THE WHOLE RESULT of that query - every row, never a few pasted in.**
 Eligibility reads row, region and category counts. A bivariate country map needs at least 24
 countries, so the same 40-country query shown as 8 sample rows hides it, and nothing fails - you are
@@ -661,12 +683,18 @@ import QUERY from "@/queries/overview/occupancy-map.dax?raw";   // the template'
 const result = useSemanticModelQuery({ connection: "<connector name>", query: QUERY });  // the DAX it was generated on
 const options = useBicChartOptions();
 const country = useBicFilter("CountryIso3", { label: "Country", display: "CountryName" });   // step 6
-<BicChartPanel result={result}>
+<BicChartPanel result={result} query={QUERY}>
   {(table, size) => (                                // table = the live { columns, rows } result
     <BivariateWorldChoroplethChart table={table} {...size} options={options} selects={country} />
   )}
 </BicChartPanel>
 ```
+
+**Give the panel the query string its hook gets (`query`).** The template's hook keeps its last result while the next one
+loads, so a result can't say which query it answers; the panel keeps the query it last drew, and while a filter's new
+rows load it dims the last chart under "Updating...", and a query that fails says so over it. Without `query`, old
+figures can sit at full strength under the new selection's label. Build a filtered query once, in a variable, and pass
+that variable to both.
 
 **A reader's view outlives the page only if you keep it.** What a reader sets inside a chart - an Interactive table's sort,
 column widths and hidden columns, a 3D camera, an expanded row - lives while the chart is mounted and is gone on reload.
@@ -745,6 +773,9 @@ function CountryMap({ table, onPick }) {          // table = the live query resu
   app-validation skill asks); only the card around it and the panel below may grow.
 - One frame per chart: a RegiaBI chart sits in your card. The template's `VisualContainer` frames its `VegaVisual`
   charts; don't put a second frame around one of ours.
+- A card's title and subtitle are static text, so they never describe what the reader can change: no sort order
+  ("highest first", "sorted by..."), no current pick, no flipped face. One click on a header and "highest occupancy
+  first" is false. Say what the chart shows; the chart shows its own sort and selection.
   Give the chart's cell at least the chart's `minChartHeight` (`h-72` is 288px, under a 300 minimum).
 
 **6. Filter the page with `useBicFilter` - never write a select handler, a toggle or a Clear.** A page filter is
@@ -761,14 +792,36 @@ import FORECAST_DAX from "@/queries/overview/bookings-forecast.dax?raw";
 const country = useBicFilter("CountryIso3", { label: "Country", display: "CountryName" });
 const route = useBicFilter(["OriginCode", "DestinationCode"],
                           { label: "Route", display: ["OriginName", "DestinationName"] });
-const forecast = useSemanticModelQuery({ connection: "<connector name>",
-  query: filterQuery(FORECAST_DAX, treatAs(country, "Geography[CountryIso3]")) });
+const forecastQuery = filterQuery(FORECAST_DAX, treatAs(country, "Geography[CountryIso3]"));
+const forecast = useSemanticModelQuery({ connection: "<connector name>", query: forecastQuery });
 
 <BicFilterChips />                                   {/* "Country: Japan ×" - what's filtered, and its clear */}
 <BivariateWorldChoroplethChart table={countries} {...size} options={options} selects={country} />
 <OriginDestinationFlowMapChart table={routes} {...size} options={options} selects={route}
   filterBy={{ filter: country, columns: ["OriginCode", "DestinationCode"] }} />
+<BicChartPanel result={forecast} query={forecastQuery}>{(table, size) => <WhatIfProjectionChart table={table} {...size} />}</BicChartPanel>
 ```
+
+**"A click filters everything else" means every OTHER panel follows it.** Each panel the person didn't click shows only
+what the pick matches: its query goes through `filterQuery` / `treatAs` (or `filterBy`, when its rows carry the key),
+KPIs and tables included - a table that follows a click shows only the matching rows. The chart that was clicked keeps
+all its marks and highlights the pick: a chart never filters itself, so the reader can change the pick there. When the
+person names more than one chart to click ("on the map or in the table"), give each its own filter on the same key,
+and pass every panel's query through a `treatAs` for each of those filters but its own - one filter shared by two
+clicked charts leaves each unfiltered by the other's click:
+
+```tsx
+const fromMap = useBicFilter("CountryIso3", { label: "Country (map)", display: "CountryName" });
+const fromTable = useBicFilter("CountryIso3", { label: "Country (table)", display: "CountryName" });
+const COUNTRY = "Geography[CountryIso3]";
+const mapQuery = filterQuery(MAP_DAX, treatAs(fromTable, COUNTRY));       // the map follows the table's pick
+const tableQuery = filterQuery(TABLE_DAX, treatAs(fromMap, COUNTRY));     // the table follows the map's
+const kpiQuery = filterQuery(KPI_DAX, treatAs(fromMap, COUNTRY), treatAs(fromTable, COUNTRY));   // the rest follow both
+// <MapChart ... selects={fromMap} /> and <TableChart ... selects={fromTable} />; every panel gets its query={...}
+```
+
+`check_app` lists each chart's wiring - filtered query, highlight only, or none - and warns on a panel no click
+reaches. Say that list in your reply, with any panel you left whole and why, so a gap is seen before deploy.
 
 What the library does, so the page doesn't:
 - A click sets the filter. The same click again, or a click on empty canvas, clears it. Ctrl-click adds a key.
@@ -836,6 +889,10 @@ dropped the `src/fabric.generated.ts` line. It writes `rayfin/tsconfig.json` - k
 writes no `rayfin/data/schema.ts` either: don't write one by hand - `setup_fabric_app` with `features` (step c) writes it
 when `rayfin/rayfin.yml` shows the data service on.
 
+Then turn Rayfin's functions on, because each save runs on the server, which stamps its time (step e):
+`npx rayfin functions init`. It scaffolds `rayfin/functions` (its `function_app.ts` and generated `types.ts`) and sets
+`services.functions` in `rayfin/rayfin.yml`, with `auth.type: application`.
+
 *b. Make it type-check.* Three edits, each needed on the data app template:
 - `rayfin/tsconfig.json`, in `compilerOptions`: `"tsBuildInfoFile": ".temp/tsconfig.tsbuildinfo"` and
   `"allowImportingTsExtensions": false` (it inherits both from the root: TS6377 and TS5096 otherwise).
@@ -853,28 +910,37 @@ TS2345 names two copies of `rayfin-auth`, something installed only some Rayfin p
 *c. The files: `setup_fabric_app` with `features: ["notes"]`.* With the data service on, it writes them finished and
 never rewrites them:
 - `rayfin/data/MarkNote.ts`, registered in `rayfin/data/schema.ts` - keyed by the mark's model key, never a row
-  position: `chart`, `markKey`, `markKeyTo` (a route's other end), `body`, `author`, `createdAt`. Every entity it
-  writes has an explicit permission decorator and a `max` on every `@text` (MSSQL gets `NVARCHAR(MAX)` without one,
-  which can break the deployed GraphQL schema).
+  position: `chart`, `markKey`, `markKeyTo` (a route's other end), `body`, `author`, `authorId`, `createdAt`. Every
+  entity it writes has an explicit permission decorator and a `max` on every `@text` (MSSQL gets `NVARCHAR(MAX)` without
+  one, which can break the deployed GraphQL schema). Its create permission carries a policy,
+  `claims.sub.eq(item.authorId)`: the server takes a note only under the caller's own id.
 - `src/lib/bic-notes.ts`: `useMarkNotes(author)` - every note (paged with `.executePaginated()`: one query returns at
   most 100 and doesn't say there are more), an `error` when they can't load, and `add(chart, key, body)`, which saves
-  with `.create(` and reloads, and REJECTS when the save fails. The author is the signed-in user:
-  `useAuth().session?.user?.email`.
+  through the `addMarkNote` Rayfin function and reloads, and REJECTS when the save fails. The author is the signed-in
+  user, `useAuth().session?.user` (its id and email); with no one signed in, `add` refuses and says why - never "unknown".
+- `rayfin/functions/src/bic-notes-functions.ts`, registered in `function_app.ts`: `addMarkNote`, which runs on the
+  server, stamps `createdAt` from the server's clock and saves with `.create(` as the caller, so the policy still checks
+  who. Written once Rayfin's functions are on (step a); before that, `setup_fabric_app` says to run
+  `npx rayfin functions init` and then itself again.
 - `src/components/bic-notes-dialog.tsx`: `NotesDialog`, over the page through `createPortal`, never inside the
   chart's card (a card has a fixed height and `overflow-hidden`, and clips it). The reader's text is cleared only once
-  the save succeeds; a failure is shown with the text kept.
+  the save succeeds; a failure is shown with the text kept. Tab stays inside it, Escape closes it, and focus goes back
+  to what opened it (`useDialogFocus`, from `src/lib/bic-dialog.ts`, which `setup_fabric_app` always writes).
 
-*d. Badges on the marks: pass `annotations`, never measure the chart.* The host draws each badge on its key's mark (on a
-table row, just after the row's label; on a chart type that asks for it, such as a tile map, a small dot inside the
-tile's top-right corner with the `label` and `title` in its tooltip) after every render and keeps it there through filters, re-queries and zooms; it never reads a row position. A route is
-keyed by BOTH of its ends with `where` - no key column to add, no query to change and no chart to regenerate:
+*d. Badges on the marks: pass `annotations`, never measure the chart.* The host draws each badge on its key's mark after
+every render and keeps it there through filters, re-queries and zooms; it never reads a row position. On a table row it
+is a small badge just after the row's label, showing its `label` (`noteBadges` makes that the count of notes). On a
+chart type that asks for it, such as a tile map, it is a plain dot inside the tile's top-right corner with no number on
+it: the `label` and `title` are in its tooltip. Describe it that way to the person - a dot whose tooltip gives the
+count, not a numbered marker. A route is keyed by BOTH of its ends with `where` - no key column to add, no query to
+change and no chart to regenerate:
 
 ```tsx
 import { noteBadges, notesFor, badgeKey } from "@bicharts/chart-host/react";
 
 import { useAuth } from "@/hooks/auth.context";
 
-const { notes, add } = useMarkNotes(useAuth().session?.user?.email);
+const { notes, add } = useMarkNotes(useAuth().session?.user);
 <BivariateWorldChoroplethChart table={table} {...size} options={options} selects={country}
   annotations={noteBadges(notes, { chart: "occupancy-map", columns: "CountryIso3" })}
   onAnnotationClick={a => setOpen({ chart: "occupancy-map", columns: "CountryIso3", key: badgeKey(a) })} />
@@ -894,6 +960,60 @@ or bounding boxes to place anything: that breaks on the next redraw, and this do
 The files use the template's own tokens; restyle them as you like. The table and the permissions are created on
 the next `npx rayfin up`, and every later `rayfin up` applies entity changes.
 
+*e. Anything else the app writes (action items, flags, approvals) keeps the same rules.* Write it the way the notes
+files do:
+- **Who** is the signed-in user, `useAuth().session?.user`: store its `id` beside the name you show, and give the
+  entity's create permission a policy that checks it - `@role<Item>('authenticated', 'create', { policy: (claims, item) =>
+  claims.sub.eq(item.createdById) })` - so the server refuses a row filed under anyone else. With no one signed in,
+  refuse the save and say why (the form keeps what was typed); never store "unknown".
+- **When** is the server's clock, never the browser's: every write that records a time (an item created, an item
+  marked done) goes through a Rayfin function that stamps it on the server. Rayfin's data layer (checked on 1.36.2) has
+  no server-time default for a field (a `default` is a fixed value), so the browser never sends the time at all. The
+  function saves with `ctx.getDataClient()`, which carries the caller's identity and permissions, so the who-check
+  above still holds.
+- **A change that happens once** (done, approved, closed) is its own row, never an update anyone can repeat: an update
+  permission with no policy lets a second person mark a done item done again and overwrite who closed it. Key the row
+  by the item with a unique field, under the same who-check, so a second one fails at the database and the first
+  stays; an item is open while it has no such row, and only an open item offers the action.
+
+```ts
+// rayfin/data/TaskDone.ts
+@entity()
+@authenticated('read')
+@role<TaskDone>('authenticated', 'create', { policy: (claims, item) => claims.sub.eq(item.doneById) })
+export class TaskDone {
+  @uuid() id!: string;
+  @uuid({ unique: true }) taskId!: string;     // one per task: a second "done" fails, so the first completer stays
+  @text({ max: 320 }) doneBy!: string;         // the name shown (the session's email)
+  @text({ max: 128 }) doneById!: string;       // session.user.id, checked against the caller by the policy
+  @date() doneAt!: Date;                       // the server's clock: set only in markTaskDone below
+}
+
+// rayfin/functions/src/function_app.ts (next to the setup's registrations), after `const udf = new UserDataFunctions();`
+udf.func("markTaskDone", async (taskId: string, doneBy: string, doneById: string,
+    ctx: RayfinContext<AppSchema>): Promise<void> => {
+  await ctx.getDataClient().TaskDone.create({ taskId, doneBy, doneById, doneAt: new Date() });   // the server's time
+}, []);
+
+// in the app: no time from the browser
+await getRayfinClient().functions.markTaskDone.invoke({ taskId: task.id, doneBy: user.email, doneById: user.id });
+```
+
+`RayfinContext` comes from `@microsoft/fabric-user-data-functions` and `AppSchema` from `../../data/schema.js`
+(`import type` for both). A function's input is the named values `invoke` passes, so give each one a type.
+
+**What this can't stop yet.** A Rayfin function writes with the same permissions as the browser, and Rayfin has no
+server-time default for a field and no permission that only a function holds. So the app's own saves always carry the
+server's time, but a request someone writes by hand against the data API can still set its own. Say so if the person
+asks for an audit trail; a database the app reaches only through functions would close it, and Rayfin doesn't offer
+that today.
+
+- **A dialog of your own** (a form over the page) uses `useDialogFocus(ref, onClose)` from `src/lib/bic-dialog.ts`:
+  Tab stays inside it, Escape closes it, and focus goes back to what opened it.
+
+`check_app` flags a placeholder name in a write, a time written from the browser's clock, an entity that takes any
+name on create or lets any row be updated again, and a dialog that doesn't hold the keyboard.
+
 Don't stand up a backend to test notes; the deploy creates the tables. Finish with `npx tsc -b` and the tests, and say the notes go live on deploy.
 
 **7. A chart's own controls are page state: `useBicControls`.** A What-if chart's sliders (a rate, a horizon) are drawn
@@ -905,7 +1025,7 @@ import { ScenariosPanel } from "@/components/bic-scenarios-panel";   // setup_fa
 
 const scenario = useBicControls();
 <WhatIfProjectionChart table={table} {...size} options={options} controls={scenario} />
-<ScenariosPanel chart="bookings-forecast" controls={scenario} author={useAuth().session?.user?.email} />
+<ScenariosPanel chart="bookings-forecast" controls={scenario} author={useAuth().session?.user} />
 ```
 
 `scenario.values` holds every slider's value from the first draw - no slider has to move before a scenario can be
@@ -914,7 +1034,8 @@ horizon 12 months"), so a saved scenario shows the unit the chart shows. `scenar
 returns to the chart's defaults. Don't read `uiState.knobs` or the chart's source, and never save a default you made
 up. `features: ["scenarios"]` writes the `SavedScenario` entity, `useSavedScenarios` and `ScenariosPanel` (save under a
 name, list, apply, and which one is applied now - `applied`, the saved scenario whose values the chart shows; a failed
-save keeps what was typed).
+save keeps what was typed), and, with Rayfin's functions on, the `addSavedScenario` function each save runs through, so
+the server stamps its time.
 
 **8. What stays the template's job - this is additive, never a replacement:** sign-in, the query hooks
 (`useSemanticModelQuery`; a page filter feeds it through `filterQuery`), the theme (`useCssTheme`, which
@@ -926,12 +1047,18 @@ deployment. The chart is a function you render inside them.
 at the size the panel will give it - by default it reads the chart's `minChartWidth` and `minChartHeight`
 off its `BicChartPanel`, so pass no size unless you mean another one. A `WARNING` line in its reply is a
 label cut off at that size: deal with it before you call the chart done. The reply says whether more room fixes it.
+So is a `WARNING` that one value sets a color scale's span (the rest then look even): fix the query or regenerate.
+For a table, its `Table` lines say how each column draws and what stays in place as the rows scroll, read from the
+drawn table: quote them in your reply wherever the person asked how the table draws or what stays put, and when they
+differ from the ask (a column printed where they asked for marks, more held in place than they allowed), regenerate
+with a prompt that names the difference.
 Never edit the generated chart code by hand: if something's wrong with a generated chart, regenerate it
 (`generate_chart` with a prompt describing the fix) or report it.
 Then run `check_app` once on the whole app, before every deploy: it reads how the page uses the library (selection
-through `useBicFilter` + `selects`, a chart's own controls through `useBicControls`, notes through `annotations`, every
-chart in a `BicChartPanel`), draws every chart together, and compares the stack with npm. Each finding names the file,
-the line and the call to use instead; fix the ERRORs in the app's own files before deploying.
+through `useBicFilter` + `selects`, each chart's filter wiring, a chart's own controls through `useBicControls`, notes
+through `annotations`, every chart in a `BicChartPanel`), draws every chart together, and compares the stack with npm.
+Each finding names the file, the line and the call to use instead; fix the ERRORs in the app's own files before
+deploying, and say its filter-wiring list in your reply.
 You don't need to deploy to check a chart. The template's `validate:visual` checks `VegaVisual` factories; a
 RegiaBI chart's check is `check_chart` - don't list it there. `check_chart` and `check_app` check the charts and how
 the app uses them; the template's app-validation in the portal embed still applies. Then `npx tsc -b` and the tests. To test the page's behavior,
