@@ -799,7 +799,7 @@ const forecast = useSemanticModelQuery({ connection: "<connector name>", query: 
 <BivariateWorldChoroplethChart table={countries} {...size} options={options} selects={country} />
 <OriginDestinationFlowMapChart table={routes} {...size} options={options} selects={route}
   filterBy={{ filter: country, columns: ["OriginCode", "DestinationCode"] }} />
-<BicChartPanel result={forecast} query={forecastQuery}>{(table, size) => <WhatIfProjectionChart table={table} {...size} />}</BicChartPanel>
+<BicChartPanel result={forecast} query={forecastQuery}>{(table, size) => <WhatIfProjectionChart table={table} {...size} scopedBy={country} />}</BicChartPanel>
 ```
 
 **"A click filters everything else" means every OTHER panel follows it.** Each panel the person didn't click shows only
@@ -817,11 +817,19 @@ const COUNTRY = "Geography[CountryIso3]";
 const mapQuery = filterQuery(MAP_DAX, treatAs(fromTable, COUNTRY));       // the map follows the table's pick
 const tableQuery = filterQuery(TABLE_DAX, treatAs(fromMap, COUNTRY));     // the table follows the map's
 const kpiQuery = filterQuery(KPI_DAX, treatAs(fromMap, COUNTRY), treatAs(fromTable, COUNTRY));   // the rest follow both
-// <MapChart ... selects={fromMap} /> and <TableChart ... selects={fromTable} />; every panel gets its query={...}
+// <MapChart ... selects={fromMap} scopedBy={fromTable} /> and <TableChart ... selects={fromTable} scopedBy={fromMap} />;
+// <KpiChart ... scopedBy={[fromMap, fromTable]} />; every panel gets its query={...}
 ```
 
+**A panel whose query takes a page filter passes that filter as `scopedBy`, so the chart says it's filtered.** Its rows
+arrive already narrowed, and the chart can't see a filter applied to its query: a KPI deck kept its region's title over
+one country's totals and ranked what the filter left. Given `scopedBy={country}` (or `scopedBy={[fromMap, fromTable]}`),
+the chart names the pick while it is active - "North America · United States only", "rank 2 of 3 (United States
+only)" - and goes back to its own titles when it clears. Pass every filter its query's `treatAs` takes; a panel narrowed
+with `filterBy` needs nothing more, its component tells the chart itself.
+
 `check_app` lists each chart's wiring - filtered query, highlight only, or none - and warns on a panel no click
-reaches. Say that list in your reply, with any panel you left whole and why, so a gap is seen before deploy.
+reaches, and on a filtered-query panel with no `scopedBy`. Say that list in your reply, with any panel you left whole and why, so a gap is seen before deploy.
 
 What the library does, so the page doesn't:
 - A click sets the filter. The same click again, or a click on empty canvas, clears it. Ctrl-click adds a key.
