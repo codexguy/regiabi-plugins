@@ -898,7 +898,11 @@ arrive already narrowed, and the chart can't see a filter applied to its query: 
 one country's totals and ranked what the filter left. Given `scopedBy={country}` (or `scopedBy={[fromMap, fromTable]}`),
 the chart names the pick while it is active - "North America · United States only", "rank 2 of 3 (United States
 only)" - and goes back to its own titles when it clears. Pass every filter its query's `treatAs` takes; a panel narrowed
-with `filterBy` needs nothing more, its component tells the chart itself.
+with `filterBy` needs nothing more, its component tells the chart itself. A panel whose query removes a pick on every
+figure it plots (each measure under `REMOVEFILTERS`, `ALL` or an `ALLEXCEPT` that drops the picked column, as the closed
+deal figures are under a stage pick) isn't narrowed by it: leave that pick out of its `scopedBy`, or apply it, or its
+scope line names a stage its marks never move for. `check_app` flags a `scopedBy` pick the panel's query removes from
+everything it plots.
 
 `check_app` lists each chart's wiring - filtered query, highlight only, or none - and warns on a panel no click
 reaches, and on a filtered-query panel with no `scopedBy`. Say that list in your reply, with any panel you left whole and why, so a gap is seen before deploy.
@@ -1202,7 +1206,11 @@ const markDone = useCallback(async (taskId: string) => {
 - **A dialog of your own** (a form over the page) uses `useDialogFocus(ref, onClose)` from `src/lib/bic-dialog.ts`:
   Tab stays inside it, Escape closes it (it asks first when a field holds typed text, and an open list inside it, such
   as the target picker's, takes its own Escape), and focus goes back to what opened it - or, when a save repainted that (a
-  chart's badge), to its replacement.
+  chart's badge), to its replacement. Typed means the reader changed a field and it holds text that differs from what
+  it held when the dialog opened: a field you fill (the picker started at the chart's pick, a form opened on a saved row)
+  isn't typed, so `closeFromBackdrop` still closes it. Save through the form's `onSubmit` and clear the fields on
+  success: the helper then takes what the fields hold as the new start, so a country chosen before the save no longer
+  holds the backdrop.
 
 `check_app` flags a placeholder name in a write, a time written from the browser's clock, an entity that takes any
 name on create or lets any row be updated again, a name it stores that its policy doesn't check against the token, a write that resolves before its reload lands, and a dialog that
