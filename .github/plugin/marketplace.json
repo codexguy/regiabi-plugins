@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "regiabi-charts",
-      "description": "AI Data Components for Power BI, Excel, Fabric Apps and web: bivariate maps, what-if projections.",
+      "description": "AI Data Components over MCP: working what-if apps, interactive tables and maps, plus 90 chart types.",
       "version": "0.6.112",
       "source": "./"
     }

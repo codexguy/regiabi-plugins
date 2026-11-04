@@ -1,7 +1,7 @@
 {
   "name": "regiabi-charts",
   "version": "0.6.112",
-  "description": "AI Data Components for Power BI, Excel, Fabric Apps and web: bivariate maps, what-if projections.",
+  "description": "AI Data Components over MCP: working what-if apps, interactive tables and maps, plus 90 chart types.",
   "author": {
     "name": "CodeX Enterprises LLC",
     "url": "https://bizintelligencechampions.com/regiabi"
@@ -13,7 +13,7 @@
   "mcpServers": "./.mcp.json",
   "keywords": ["charts", "data-visualization", "d3", "plotly", "mcp", "fabric", "rayfin", "power-bi", "dashboard"],
   "interface": {
-    "displayName": "RegiaBI charts",
+    "displayName": "RegiaBI apps",
     "shortDescription": "AI Data Components for Power BI and more",
     "developerName": "CodeX Enterprises LLC",
     "category": "Coding",
