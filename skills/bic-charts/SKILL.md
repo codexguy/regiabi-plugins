@@ -215,6 +215,20 @@ the next `generate_chart`, or, for a live setting, an option in the emitted comp
 unattended run), ask nothing, use the defaults, and tell the user which settings were assumed from
 `settings.applied`. `get_guide` with topic `settings` lists every row with its options.
 
+**Which direction is good: ask it in that same question, when a chart will judge a measure.** A chart that compares,
+ranks or colors a measure as good or bad (a variance against a target, a KPI rank, ahead or behind, a diverging color)
+needs to know whether more of it is better, and the data can't say: a rising cost and a rising bookings figure move the
+same way. So when the page has such a chart, the one question before the first `generate_chart` also asks, for each
+measure it judges that the person hasn't already given a direction for, "is a higher <measure> better, or a lower
+one?". Pass each answer in `generate_chart`'s `direction_of_good`, keyed by the measure's column name as sent:
+`direction_of_good: { "Bookings": "higher", "Cost": "lower" }`. On a server whose `generate_chart` has no
+`direction_of_good`, say it in that chart's `prompt` instead: `higher <measure> is better` or `lower <measure> is
+better`. When you can't ask (a sub-agent, an unattended run) or the person said to use the
+defaults, pass nothing: the engine infers a direction for a measure it can place (an actual against its own target:
+higher is better; an expense, spend or opex: lower is better) and leaves the rest neutral; say in your final message which measures it was left to infer. A
+measure the person already named a direction for is never asked again. `check_app` flags a chart generated with no
+direction of good where it judges one.
+
 **Your final message keeps what the engine chose apart from what falls short.** Under what the engine chose, list its
 choices (the `settings.applied` rows it picked - `default`, `server-roll` - and `engineChoices`) and each chart's limits
 (a width it won't draw below, so the layout stacks it; a row cap; a type a count ruled out). Those are choices and
@@ -568,6 +582,21 @@ overwrites a file, and its reply ends with a worked example. Building notes on m
 data service is on (the notes recipe below, step a), run it again with `features: ["notes", "scenarios"]`: it writes
 those files finished.
 
+**Every page works in light and dark, without being asked.** `setup_fabric_app` writes `src/lib/bic-theme.ts`, the
+app's light/dark state: it follows Fabric's `data-appearance`, else the OS, until the reader picks, and the pick holds
+for the session. It points the template's `src/main.tsx` at it in place of the template's own hook, which watches its own
+class change and, under a host that sets `data-appearance`, flips a reader's pick straight back. It also writes
+`src/components/bic-theme-toggle.tsx`: put `<BicThemeToggle />` in the app's header, on every page, whether or not the
+person asked for one. Then build every page for both themes:
+- Colors come from the template's tokens (`bg-card`, `bg-background`, `text-foreground`, `text-muted-foreground`,
+  `border-border`, `text-destructive`), never a literal (`#fff`, `bg-white`, `text-gray-700`, `style={{ color: "#333" }}`):
+  a literal stays the same color in both themes, so white text lands on a white card.
+- Charts follow on their own: `useBicChartOptions()` passes the theme (the background as both `backgroundColor` and
+  `themeBg`), and the charts redraw when the toggle flips it. Pass it to every chart; never a color of your own.
+- A dialog's scrim is `bg-black/40`, which dims the page in both themes; `bg-foreground/40` washes it white in dark mode.
+- Look at every page in both themes before you call it done.
+`check_app` flags a page with no toggle, the template's hook, a literal color and a scrim that flips with the theme.
+
 **The model's name is the `connection`.** Connect the semantic model the way the template's AGENTS.md says - before or
 after `setup_fabric_app`, whose reply names it either way. On the template's current layout the model is a Rayfin
 connector: `npx rayfin connector search "<model name>" --all-workspaces --type fabric-semanticmodel --json`, then the
@@ -600,6 +629,42 @@ is:
 `query_semantic_model` flags the never-blank forms in the query it runs (and a column at exactly -1 where its base is
 blank), `check_app` flags them in the app's `.dax` files, and `check_chart` warns when one value sets a diverging color
 scale's span.
+
+**A chart's categories come from the data.** Group by the category column and let the chart take every value the
+model holds; never name the categories in the DAX one filter at a time (`CALCULATE([Sales], 'Channel'[Channel] =
+"Online")`, then "Retail", then "Partner"). A value the model adds or renames would drop out silently, and a chart that
+divides by their sum would re-scale every mark to the ones named. `check_app` flags a query that names two or more
+values of one column that way.
+
+**A shown total is the sum of the parts shown.** When a card shows a total and another panel shows its parts (a goal,
+and each owner's goal in a table), compute the total from those parts, so the reader can add them up and get it:
+
+```dax
+"Goal", SUMX ( VALUES ( 'Owner'[Owner] ), [Goal] )   -- the sum of the owners' goals the table shows
+```
+
+A measure evaluated once at the total isn't the sum of its parts when it rounds (MROUND, ROUND), clamps or takes a
+maximum each time it's evaluated, and a ratio over it (an attainment) then disagrees with the table's. Compute that ratio
+from the summed total too. `check_app` flags a total panel whose measure rounds while another panel shows it by part
+(read from the project's schema cache).
+
+**A query reads the window its card names.** A card that says "2019 to 2025", "to December 2025" or "in 2025" gets a
+query bounded to that window, with a filter on the model's date column inside SUMMARIZECOLUMNS:
+
+```dax
+EVALUATE
+SUMMARIZECOLUMNS (
+    'Date'[Month],
+    DATESBETWEEN ( 'Date'[Date], DATE ( 2019, 1, 1 ), DATE ( 2025, 12, 31 ) ),   -- "2019 to 2025"
+    "Bookings", [Bookings]
+)
+-- one year: TREATAS ( { 2025 }, 'Date'[Year] )
+```
+
+Without it the chart reads whatever the model holds - a month after the stated end, a year before its start - while the
+card's words stay as written. Write the card's words and the query's bound together, from the same dates; for a
+projection, the window is the history it starts from, and its horizon is the chart's own control. `check_app` warns on a
+card that names a window over a query with no bound on it.
 
 **2. Profile and generate from THE WHOLE RESULT of that query - every row, never a few pasted in.**
 Eligibility reads row, region and category counts. A bivariate country map needs at least 24
@@ -756,10 +821,17 @@ function CountryMap({ table, onPick }) {          // table = the live query resu
 
 **Layout: a chart is never clipped or squashed.** Charts sit in cards, and a card is where they get cut off.
 - Render every chart inside `BicChartPanel`. It sizes the chart from its cell, never from the chart.
-- Give each chart its minimum: `minChartWidth` and `minChartHeight` (a world map about 560 x 300; a time series wants
+- Give each chart its minimum: `minChartWidth` and `minChartHeight` (a world map wants about 2:1; a time series wants
   height). Below that the panel scrolls; it never squashes or clips the chart. That scroll is a safety net, not a layout:
   inside a page that already scrolls it's a second scrollbar, which reads as broken - size every chart's cell at or above
   its minimum so it never shows.
+- **A phone needs no sideways scroll.** A phone is about 360px wide, and the page's and the card's padding leave a
+  chart's box 294 of it. `BicChartPanel` draws a chart at its box's width, so set no `minChartWidth` unless the chart
+  needs more, and never one above 294; make the chart fit that width instead: check it with `check_chart` (it checks at
+  294 when no width is named), and if it doesn't fit, generate it again with `generate_chart` at `width: 294` (the
+  engine's small-screen rules then apply). A minimum wider than the phone's box draws the chart wider than its card,
+  so the card scrolls sideways and anything the chart keeps in place (a table's name column) scrolls away with it.
+  `check_app` warns on a `minChartWidth` above 294.
 - Take the actual size from the layout - percent, flex or grid `fr` - and never a fixed height smaller than the chart's
   minimum.
 - Put `min-h-0` on every flex child between a card and its chart (`min-w-0` in a row). A flex item's default
@@ -843,6 +915,21 @@ What the library does, so the page doesn't:
 - `country.value`, `country.values`, `country.keys`, `country.row` (the clicked row), `country.active` and
   `country.text` ("Japan", or "Spain → Portugal" for a route) are what the page reads. For any OTHER key - a badge's,
   a lane's end - `country.textOf(key, rows)` names it from a table that carries the display column.
+- A pick can be a group: a legend entry, a subtotal row, a lasso or a Ctrl-click picks several keys through the same
+  filter, and `country.value` is its FIRST key only. Anything that names or acts on the pick (a panel heading, an "Add
+  an item" button) reads `country.keys`: with one, name it (`country.text`); with more, say how many ("3 countries")
+  and list them, and offer a one-mark action only while `country.keys.length === 1`. When several filters share a key
+  (one per clicked chart), read every one of them. `check_app` flags a `.value` read.
+- **A label picks its own field.** On a chart of region by stage with a filter keyed `["Region", "PipelineStep"]`, a
+  click on a region's axis label holds that region in ANY stage, not the stage tuples drawn at that moment: the key is
+  `["EMEA", ANY_VALUE]` (`isAnyValue` tells a free column; both from `@bicharts/chart-host/react` or `/page`), the chip
+  reads "EMEA", and `treatAs(filter, "Accounts[Region]", "Deals[Stage]")` filters by the region alone. Never build tuple
+  keys by hand or `set()` the drawn combinations: a stage that comes back when another filter clears is then left out.
+- **Key a click filter at the grain of the marks that set it.** A chart with one mark per product in each region
+  sets `useBicFilter(["Product", "Region"])`, never `useBicFilter("Product")`: keyed by product alone, one picked mark
+  picks that product in every region, the chart lights more marks than the reader picked (a lasso's group comes back
+  wider than it was drawn), and the page filters a wider group. A column from the key's own table (a product's
+  category) is an attribute, not a finer grain. `check_app` flags a filter keyed coarser than its chart's marks.
 - Another chart whose table carries the key: `filterBy={{ filter: country, columns: [...] }}` on its component - any
   of several columns, for a route that starts or ends there. It's applied inside the component, so the chart redraws
   only when the filter or its data changes. A table WITHOUT the key column can't be filtered that way (it warns): filter
@@ -852,6 +939,21 @@ What the library does, so the page doesn't:
   It adds a filter value and never changes the query's structure, so one `.dax` file serves both. A route filter maps
   each end: `treatAs(route, "Routes[Origin]", "Routes[Destination]")`; `treatAs(route, "Geography[CountryIso3]")` takes
   the route's FIRST column (its origin). Two filters on one column intersect: pass the one that should win.
+- **A pick narrows only the measures it can mean.** A filter passed through `filterQuery` narrows EVERY measure in that
+  query, so decide per measure what the pick means. A stage pick narrows the open measures (the value in a stage, the
+  deals in it), not the closed ones (won value, the goal, attainment, the close rate): a won deal's stage isn't the
+  reader's question. Keep those out of the pick's reach - their own query that doesn't take it, or
+  `CALCULATE([Won Value], REMOVEFILTERS('Deals'[Stage]))` in the query - and say on the card which figures follow the
+  pick. Pass a pick only to panels it can reach, too: a model's relationships filter one way, so a deal's stage can't
+  narrow a table that relates only to accounts, and a `scopedBy` naming it there tells the chart something false.
+  `check_app` reads the model's relationships from the project's schema cache (`.schema/models/<model>/model.sqlite`)
+  and flags a `treatAs` column that can't reach a panel's query, and a `scopedBy` that claims it; with no cache it says
+  the check was skipped. A pick reaches a measure through the tables its expression reads, not the table it's kept on:
+  a goal kept on an owners table but computed from the deals follows a region pick on accounts (Accounts filters the
+  deals), while one computed from the owners table alone stays the whole company's beside revenue that narrows, and the
+  attainment over the two reads low. Carry the pick to it - `CALCULATE ( [Goal], TREATAS ( VALUES ( 'Accounts'[Region]
+  ), 'Owners'[Region] ) )` - or say on the card that it ignores that pick. `check_app` flags a measure a pick can't
+  reach beside figures it narrows.
 
 A Microsoft `VegaVisual` or `DataGrid` on the same page joins the same filter:
 `onInteraction={e => fromVegaInteraction(country, e)}` (`fromVegaInteraction` from `@bicharts/chart-host/react`; a page without React takes all of these from `@bicharts/chart-host/page`). It matches
@@ -921,7 +1023,9 @@ never rewrites them:
   position: `chart`, `markKey`, `markKeyTo` (a route's other end), `body`, `author`, `authorId`, `createdAt`. Every
   entity it writes has an explicit permission decorator and a `max` on every `@text` (MSSQL gets `NVARCHAR(MAX)` without
   one, which can break the deployed GraphQL schema). Its create permission carries a policy,
-  `claims.sub.eq(item.authorId)`: the server takes a note only under the caller's own id.
+  `claims.sub.eq(item.authorId).and(claims.email.eq(item.author))`: the server takes a note only under the caller's own
+  id and email, and the `addMarkNote` function checks both against the caller's token first, so a note can't be filed
+  under someone else's name.
 - `src/lib/bic-notes.ts`: `useMarkNotes(author)` - every note (paged with `.executePaginated()`: one query returns at
   most 100 and doesn't say there are more), an `error` when they can't load, and `add(chart, key, body)`, which saves
   through the `addMarkNote` Rayfin function and reloads, and REJECTS when the save fails. The author is the signed-in
@@ -965,6 +1069,15 @@ Open a mark's notes from `onAnnotationClick` (`badgeKey(a)` is its key), and its
 note" action on the selected mark - `country.keys[0]` is its key, `country.text` its name. Don't read `data-row-idx`
 or bounding boxes to place anything: that breaks on the next redraw, and this does it for you.
 
+**A chart that carries write markers draws every row a marker can belong to.** A badge lands only on a drawn mark, so
+a map whose query keeps only the accounts with open pipeline (`FILTER ( SUMMARIZECOLUMNS ( ... ), NOT ISBLANK ( [Open
+Pipeline] ) )`) never shows a flag on an account whose deals are all won or lost, though the flag form offered it. Drop
+the row filter: the chart draws a row with a blank size as a hollow ring (say on the card what a ring means). An
+account with no fact rows at all is dropped by `SUMMARIZECOLUMNS` too, which drops a row whose measures are all blank, so
+when the form offers every account, list them with `ADDCOLUMNS ( SUMMARIZE ( 'Accounts', 'Accounts'[Account Number],
+... ), "Open Pipeline", [Revenue Open] )`. `check_app` flags a marker-hosting chart whose query drops rows the form can
+target.
+
 The files use the template's own tokens; restyle them as you like. The table and the permissions are created on
 the next `npx rayfin up`, and every later `rayfin up` applies entity changes.
 
@@ -974,6 +1087,10 @@ files do:
   entity's create permission a policy that checks it - `@role<Item>('authenticated', 'create', { policy: (claims, item) =>
   claims.sub.eq(item.createdById) })` - so the server refuses a row filed under anyone else. With no one signed in,
   refuse the save and say why (the form keeps what was typed); never store "unknown".
+- **The name shown comes from the caller's token too**, never only from the browser: the name is the signed-in email,
+  and the policy checks it with the id - `claims.sub.eq(item.createdById).and(claims.email.eq(item.createdBy))` - so a
+  hand-made call with your own id and someone else's name is refused. (`claims.email` is the token's email claim; a
+  Rayfin function sees the same token as `ctx.accessToken`.)
 - **When** is the server's clock, never the browser's: every write that records a time (an item created, an item
   marked done) goes through a Rayfin function that stamps it on the server. Rayfin's data layer (checked on 1.36.2) has
   no server-time default for a field (a `default` is a fixed value), so the browser never sends the time at all. The
@@ -988,11 +1105,11 @@ files do:
 // rayfin/data/TaskDone.ts
 @entity()
 @authenticated('read')
-@role<TaskDone>('authenticated', 'create', { policy: (claims, item) => claims.sub.eq(item.doneById) })
+@role<TaskDone>('authenticated', 'create', { policy: (claims, item) => claims.sub.eq(item.doneById).and(claims.email.eq(item.doneBy)) })
 export class TaskDone {
   @uuid() id!: string;
   @uuid({ unique: true }) taskId!: string;     // one per task: a second "done" fails, so the first completer stays
-  @text({ max: 320 }) doneBy!: string;         // the name shown (the session's email)
+  @text({ max: 320 }) doneBy!: string;         // the name shown: the session's email, checked against the token's
   @text({ max: 128 }) doneById!: string;       // session.user.id, checked against the caller by the policy
   @date() doneAt!: Date;                       // the server's clock: set only in markTaskDone below
 }
@@ -1012,15 +1129,84 @@ await getRayfinClient().functions.markTaskDone.invoke({ taskId: task.id, doneBy:
 
 **What this can't stop yet.** A Rayfin function writes with the same permissions as the browser, and Rayfin has no
 server-time default for a field and no permission that only a function holds. So the app's own saves always carry the
-server's time, but a request someone writes by hand against the data API can still set its own. Say so if the person
+server's time, but a request someone writes by hand against the data API can still set its own. Who is not in that
+gap: the policy checks the name and the id against the caller's token on every write, however it arrives. Say so if the person
 asks for an audit trail; a database the app reaches only through functions would close it, and Rayfin doesn't offer
 that today.
 
+- **A write's button stays off until its reload lands.** The save resolves only once the list it reloads is on screen:
+  make the reload a function that awaits the load itself, and end the save with `await reload()`. Bumping a counter that
+  an effect reloads on returns before the rows arrive, so "Mark done" comes back on over a row that still looks open, and
+  a quick second click sends the same write again (the unique key refuses it, and the row shows an error for an item that
+  was closed). setup's notes and scenarios hooks do this.
+
+```ts
+const seq = useRef(0);
+const reload = useCallback(async () => {
+  const mine = ++seq.current;
+  const rows = await loadTasks();
+  if (mine === seq.current) setTasks(rows);   // a reload a later one overtook drops its rows
+}, []);
+const markDone = useCallback(async (taskId: string) => {
+  await saveTaskDone(taskId);   // the markTaskDone call above
+  await reload();               // resolves once the row shows done: the button stays off until then
+}, [reload]);
+```
+
+- **The rest of the pattern, each measured on a real app:**
+  - Apply only the latest reload's rows (the `seq` above): two quick saves start two reloads, and the older one can land
+    last, so an item just closed shows open again.
+  - Show "Loading..." until the first load lands, and the load's error when it fails - never an empty list's words
+    ("Nothing open") before the rows are in.
+  - A form's default that comes from data loading elsewhere (the item's owner) is adopted when it arrives, unless the
+    reader has already chosen; a lookup behind a choice list that fails says so in the form.
+  - A due date takes `min={today}`, and the server function refuses a past one.
+  - Read what the page shows, not every row ever saved: bound the query with `.where(...)` and show the first page as it
+    lands. Bound the DONE items, by when they were done; never bound the open ones, least of all by their due date: the
+    most overdue open item is the one the reader most needs, and a due-date window drops it first.
+  - A panel whose query failed offers Retry: setup's `BicChartPanel` does, from the query hook's `refetch` (pass the
+    hook's whole result).
+  - A disabled Save says why, beside it ("Pick a country from the list", "The due date can't be in the past"), tied to
+    the button with `aria-describedby`: a grey button with no word leaves the reader guessing.
+  - A moment (a done or created time) shows in the reader's own time zone; only a date stored as a calendar day (a due
+    date) is formatted in UTC.
+  - When a "done" is refused because someone else closed the item first, the list (the hook, not the row the reload
+    removes) says "Already marked done by <name>".
+  - A single pick across several filters on one key is one distinct key: a country held by both the map's and the
+    table's filter is one pick, not none.
+  - A list for a picked owner filters by the owner field the form saves (the follow-up's owner), never by the owner the
+    model gives the item's account: a follow-up on Bob's account given to Alice belongs on Alice's list. Count an owner
+    badge by that same field.
+  - A "sign in" check asks what the save asks: when the save needs the user's email, `cannotSave` checks
+    `user?.id && user.email`, not just `user`, or a reader signed in without an email claim fills in the form and is
+    told to sign in.
+  - A lookup whose rows reach the page shows its loading and its failure on the page, beside what it feeds, not only
+    in the form: an owner-of-each-account lookup run for the flag form also places the table's badges and fills the
+    follow-ups list, so while it loads, or after it fails, those read as truly empty unless the page says why. A blank
+    model value is left out of text, never put in with `String()`: `String(null)` prints "null".
+  - Other people's writes show without a page reload: the hook reloads when the page comes back into view
+    (`visibilitychange` to visible, and window `focus`), never on a timer, and a write that happens once (a done)
+    reloads whether it succeeds or is refused (`try { await markDone() } finally { await reload() }`), so a refusal
+    shows the item as it now is, with who closed it. setup's notes and scenarios hooks do this.
+  - A dialog's list is filtered from the hook's rows where it's shown (keep only its key in state), never a copy taken
+    when it opened: a copy misses the flag just added in it.
+  `check_app` flags each of these.
+- **Every write target is reachable by name, from the keyboard.** A write that goes to one mark (a flag on an account, a
+  note on a product) is opened by a chart pick, and also chosen by name: setup writes
+  `src/components/bic-target-picker.tsx`, a searchable list (type a few letters, arrows, Enter; accents and case don't
+  matter). Put `<BicTargetPicker label="Account" options={every target as { key, text }} value={key} onChange={setKey} />`
+  in the form, start it at the chart's pick when there is one, and keep the button that opens the form enabled. A
+  chart's keyboard order is its drawing order (a map's bubbles by size), so a pick alone means arrowing through every
+  mark. `check_app` flags a write button that only a chart pick enables.
+
 - **A dialog of your own** (a form over the page) uses `useDialogFocus(ref, onClose)` from `src/lib/bic-dialog.ts`:
-  Tab stays inside it, Escape closes it, and focus goes back to what opened it.
+  Tab stays inside it, Escape closes it (it asks first when a field holds typed text, and an open list inside it, such
+  as the target picker's, takes its own Escape), and focus goes back to what opened it - or, when a save repainted that (a
+  chart's badge), to its replacement.
 
 `check_app` flags a placeholder name in a write, a time written from the browser's clock, an entity that takes any
-name on create or lets any row be updated again, and a dialog that doesn't hold the keyboard.
+name on create or lets any row be updated again, a name it stores that its policy doesn't check against the token, a write that resolves before its reload lands, and a dialog that
+doesn't hold the keyboard.
 
 Don't stand up a backend to test notes; the deploy creates the tables. Finish with `npx tsc -b` and the tests, and say the notes go live on deploy.
 
