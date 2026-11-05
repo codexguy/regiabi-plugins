@@ -1,7 +1,7 @@
 {
   "name": "regiabi-charts",
   "displayName": "RegiaBI apps",
-  "version": "0.6.113",
+  "version": "0.6.114",
   "description": "AI Data Components over MCP: working what-if apps, interactive tables and maps, plus 90 chart types.",
   "author": {
     "name": "CodeX Enterprises LLC",
@@ -19,7 +19,7 @@
   "mcpServers": {
     "bic-chart": {
       "command": "npx",
-      "args": ["-y", "@bicharts/chart-mcp@0.6.113"],
+      "args": ["-y", "@bicharts/chart-mcp@0.6.114"],
       "env": {
         "BIC_LICENSEE": "${user_config.licensee}",
         "BIC_LICENSE_KEY": "${user_config.license_key}",

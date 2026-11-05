@@ -1,6 +1,6 @@
 ---
 name: bic-charts
-description: Build a web app or dashboard containing BIC-generated charts, maps, tables and app widgets — a bubble map, a table with in-cell bars, a table readers work with and keep their own way, a what-if widget, linked cross-filtering. Use whenever the bic-chart MCP tools are available and the task is "put a chart, map, table, widget or dashboard in this app".
+description: Build a web app or dashboard containing BIC-generated charts, maps, tables and app widgets — a bubble map, a table with in-cell bars, a table readers work with and keep their own way, a what-if widget, linked cross-filtering. Use whenever the bic-chart MCP tools are available and the task is "put a chart, map, table, widget or dashboard in this app" - including a plain table, grid or list of rows a person will sort, resize, hide columns of or browse - ask the chart server for it (list_eligible_charts) before hand-building one or using a template's grid.
 ---
 
 # Building an app with BIC charts
