@@ -149,7 +149,9 @@ suit your semantic model. `suggest_charts` answers from the model's own numbers.
 
 ## Support and terms
 
-- [Support](https://bizintelligencechampions.com/support)
+- [Support](https://bizintelligencechampions.com/support): a paid RegiaBI subscription includes direct support from
+  the people who build the engine (setup, sign-in, a call that fails, a chart that didn't come out right), and a
+  license you already hold for one of our Power BI or Excel visuals counts. Quote the `correlationId` from the result.
 - The server and the service it calls are covered by the
   [RegiaBI Programmatic Access Terms](https://bizintelligencechampions.com/terms-regiabi) and the
   [privacy policy](https://bizintelligencechampions.com/privacy). The server's own license ships in its npm
