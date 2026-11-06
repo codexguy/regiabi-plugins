@@ -26,6 +26,13 @@ the call. Tell them a browser tab is about to open. If the call comes back with 
 continue" and a link instead, give them that link, and call again once they've signed in. A key in
 the server's environment is only for machines with no browser, such as CI.
 
+**On the hosted server** (`https://bizintelligencechampions.com/mcp`, which the Claude Code plugin and claude.ai
+connect to), the tools can't reach the person's files: there is no `setup_fabric_app`, `query_semantic_model` or
+`suggest_charts`, and no `out_dir` or `csv_path`. Pass each table as `data` or `csv_text`; `generate_chart` returns the
+code, the rows and the binding in its reply, and you write them into the project. For a Fabric App, or charts written
+straight to disk, the person adds the local server (`claude mcp add bic-chart-local -- npx -y @bicharts/chart-mcp`) and
+the steps below apply as written.
+
 ## 0. Decide what to pull (only if you are starting from a data MODEL)
 
 Skip this if you already have a table. If you are holding a semantic model, a warehouse schema or
@@ -666,6 +673,44 @@ card's words stay as written. Write the card's words and the query's bound toget
 projection, the window is the history it starts from, and its horizon is the chart's own control. `check_app` warns on a
 card that names a window over a query with no bound on it.
 
+**A query's range comes from the data or the person's words - never a date copied from a profile.** A window is in a
+query only because the person asked for it ("2025", "the last seven years"). Otherwise the range is the data's own: the
+first and last day a profile showed are where the data ran when you looked, and a query bounded to them drops every
+later week, silently, once the model holds one. Leave the dates out, or bound the range with the data's own first and
+last day, and print the range on the card from the rows the query returns, never as typed dates:
+
+```dax
+DATESBETWEEN ( 'Calendar'[Date],                                   -- the range the cases themselves cover
+    CALCULATE ( MIN ( 'Cases'[Opened Date] ), REMOVEFILTERS () ),
+    CALCULATE ( MAX ( 'Cases'[Opened Date] ), REMOVEFILTERS () ) )
+```
+
+REMOVEFILTERS keeps the range whole under a page pick, so a quiet week at either end still reads 0. `check_app` flags a
+query bounded by a date written into it: an error when the date is a day no one names a window by (a 25th, neither the
+1st nor the end of a month), and a warning when no card around a chart reading the query names that window.
+
+**A series over time returns every period in its range.** SUMMARIZECOLUMNS drops a row whose measures are all blank, so
+under a pick with sparse data (one owner, one product) a week with no cases has no row at all, and a line joins the
+weeks either side of it: a quiet week looks as busy as its neighbors. A count or sum reads 0 for an empty period, and a
+rate or ratio stays blank (there's nothing to divide), so the line drops to 0 for the count and breaks for the rate:
+
+```dax
+EVALUATE
+SUMMARIZECOLUMNS (
+    'Calendar'[Week],
+    DATESBETWEEN ( 'Calendar'[Date],                                                  -- the range the cases cover
+        CALCULATE ( MIN ( 'Cases'[Opened Date] ), REMOVEFILTERS () ),
+        CALCULATE ( MAX ( 'Cases'[Opened Date] ), REMOVEFILTERS () ) ),
+    "Cases Opened", COALESCE ( [Case Count], 0 ),                                    -- 0 in a quiet week
+    "SLA Compliance", DIVIDE ( [Cases In SLA], [Case Count] )                         -- blank in a quiet week
+)
+-- or let the period table drive: ADDMISSINGITEMS ( 'Calendar'[Week], SUMMARIZECOLUMNS ( ... ), 'Calendar'[Week] )
+```
+
+A COALESCE keeps every period of the period table, so bound the range with a filter on its date column: the data's own
+first and last day, as above, or the window the person asked for. `check_app` warns on a query a line over time reads
+that can drop a quiet period.
+
 **2. Profile and generate from THE WHOLE RESULT of that query - every row, never a few pasted in.**
 Eligibility reads row, region and category counts. A bivariate country map needs at least 24
 countries, so the same 40-country query shown as 8 sample rows hides it, and nothing fails - you are
@@ -831,9 +876,24 @@ function CountryMap({ table, onPick }) {          // table = the live query resu
   294 when no width is named), and if it doesn't fit, generate it again with `generate_chart` at `width: 294` (the
   engine's small-screen rules then apply). A minimum wider than the phone's box draws the chart wider than its card,
   so the card scrolls sideways and anything the chart keeps in place (a table's name column) scrolls away with it.
-  `check_app` warns on a `minChartWidth` above 294.
+  `check_app` warns on a `minChartWidth` above 294, except at or below the chart type's own minimum (next).
+- **The exception: a chart type's own minimum.** Some chart types can't be read narrower than a minimum of their own,
+  and it can be wider than a phone. `generate_chart` reports it (a "Minimum size" line, and `chartMinWidth` /
+  `chartMinHeight` on its result), and the component it writes beside the chart keeps it for you: given less, the
+  component draws the chart at its minimum inside a box that scrolls, so on a phone that one chart scrolls sideways
+  and never squashes. Set nothing for it. Never regenerate a chart type below its own minimum to fit a phone - it
+  comes back squashed - and `check_chart` draws it at its minimum, as the component does.
+- **From a laptop up, no chart scrolls sideways.** A phone scrolling a chart at its type's minimum is designed; a laptop
+  never should: at every width from 1024px, give each chart a card at least its minimum. A two-column grid leaves a card
+  about 436px at a 1024px page, and a three-column one about 358px at 1280px (after the page's padding, a `gap-5` and a
+  `p-4` card with a border), so a chart whose minimum is wider gets a row of its own at those widths (move its card out of
+  the grid, or `lg:col-span-2`), or a grid track at least its minimum plus the card's padding and border
+  (`minmax(544px, ...)` for a 510px chart in that card). `check_app` warns on a card narrower than its chart's minimum at
+  any width from 1024 to 1920px.
 - Take the actual size from the layout - percent, flex or grid `fr` - and never a fixed height smaller than the chart's
-  minimum.
+  minimum. A card of fixed height holds its title and subtitle too, at a phone's width: a subtitle that takes one
+  line on a desktop wraps to three on a phone, and the chart's cell loses those lines. `check_app` warns on a card whose
+  fixed height leaves its chart under its minimum on a phone.
 - Put `min-h-0` on every flex child between a card and its chart (`min-w-0` in a row). A flex item's default
   `min-height: auto` lets it grow past its card, and the card's `overflow-hidden` slices off the rest.
 - A chart with controls drawn inside it (sliders, steppers, a reset) gets its card's full width. Put a side panel that
@@ -879,12 +939,16 @@ what the pick matches: its query goes through `filterQuery` / `treatAs` (or `fil
 KPIs and tables included - a table that follows a click shows only the matching rows. The chart that was clicked keeps
 all its marks and highlights the pick: a chart never filters itself, so the reader can change the pick there. When the
 person names more than one chart to click ("on the map or in the table"), give each its own filter on the same key,
-and pass every panel's query through a `treatAs` for each of those filters but its own - one filter shared by two
-clicked charts leaves each unfiltered by the other's click:
+all in ONE `group`, and pass every panel's query through a `treatAs` for each of those filters but its own - one filter
+shared by two clicked charts leaves each unfiltered by the other's click. The group makes them one pick: a pick in one
+clears the others, so the most recent pick is the page's one pick; every member's chart shows it, so clicking it again in
+whichever panel shows it clears it; and only the member holding it is active (one chip, one scope line). Without the
+group they are separate picks, ANDed: a country picked on the map and then in the table is held twice, and clicking it
+again on the map leaves the page filtered by the table's. `check_app` flags filters on one key without a group.
 
 ```tsx
-const fromMap = useBicFilter("CountryIso3", { label: "Country (map)", display: "CountryName" });
-const fromTable = useBicFilter("CountryIso3", { label: "Country (table)", display: "CountryName" });
+const fromMap = useBicFilter("CountryIso3", { label: "Country (map)", display: "CountryName", group: "country" });
+const fromTable = useBicFilter("CountryIso3", { label: "Country (table)", display: "CountryName", group: "country" });
 const COUNTRY = "Geography[CountryIso3]";
 const mapQuery = filterQuery(MAP_DAX, treatAs(fromTable, COUNTRY));       // the map follows the table's pick
 const tableQuery = filterQuery(TABLE_DAX, treatAs(fromMap, COUNTRY));     // the table follows the map's
@@ -892,6 +956,12 @@ const kpiQuery = filterQuery(KPI_DAX, treatAs(fromMap, COUNTRY), treatAs(fromTab
 // <MapChart ... selects={fromMap} scopedBy={fromTable} /> and <TableChart ... selects={fromTable} scopedBy={fromMap} />;
 // <KpiChart ... scopedBy={[fromMap, fromTable]} />; every panel gets its query={...}
 ```
+
+**A list beside those panels follows the page's one pick, never the union of filters.** An "open items for the picked
+countries" panel, a count or an "Add" button reads the group members' keys
+(`[fromMap, fromTable].flatMap(f => f.keys)`), which with the group are that one pick. Separate filters' keys are a union
+the page never shows: a scatter's three circled countries and a map pick of one of them list all three beside a page
+narrowed to one.
 
 **A panel whose query takes a page filter passes that filter as `scopedBy`, so the chart says it's filtered.** Its rows
 arrive already narrowed, and the chart can't see a filter applied to its query: a KPI deck kept its region's title over
@@ -902,7 +972,9 @@ with `filterBy` needs nothing more, its component tells the chart itself. A pane
 figure it plots (each measure under `REMOVEFILTERS`, `ALL` or an `ALLEXCEPT` that drops the picked column, as the closed
 deal figures are under a stage pick) isn't narrowed by it: leave that pick out of its `scopedBy`, or apply it, or its
 scope line names a stage its marks never move for. `check_app` flags a `scopedBy` pick the panel's query removes from
-everything it plots.
+everything it plots. A query that takes only part of a pick's key (`treatAs(cell, "'Accounts'[Region]")` on a region x
+stage cell) names that part: `scopedBy={{ filter: cell, takes: ["Region"] }}` says "Europe", never "Europe · 3-Propose",
+and a stage-only pick adds nothing to that chart's line.
 
 `check_app` lists each chart's wiring - filtered query, highlight only, or none - and warns on a panel no click
 reaches, and on a filtered-query panel with no `scopedBy`. Say that list in your reply, with any panel you left whole and why, so a gap is seen before deploy.
@@ -923,7 +995,8 @@ What the library does, so the page doesn't:
   filter, and `country.value` is its FIRST key only. Anything that names or acts on the pick (a panel heading, an "Add
   an item" button) reads `country.keys`: with one, name it (`country.text`); with more, say how many ("3 countries")
   and list them, and offer a one-mark action only while `country.keys.length === 1`. When several filters share a key
-  (one per clicked chart), read every one of them. `check_app` flags a `.value` read.
+  (one per clicked chart), read every one of them; they're in one `group`, so their keys are the page's one pick, never
+  a union. `check_app` flags a `.value` read.
 - **A label picks its own field.** On a chart of region by stage with a filter keyed `["Region", "PipelineStep"]`, a
   click on a region's axis label holds that region in ANY stage, not the stage tuples drawn at that moment: the key is
   `["EMEA", ANY_VALUE]` (`isAnyValue` tells a free column; both from `@bicharts/chart-host/react` or `/page`), the chip
@@ -1082,6 +1155,12 @@ when the form offers every account, list them with `ADDCOLUMNS ( SUMMARIZE ( 'Ac
 ... ), "Open Pipeline", [Revenue Open] )`. `check_app` flags a marker-hosting chart whose query drops rows the form can
 target.
 
+**Markers go on every page that shows what they mark.** When the request asks for markers "on the map and in the table"
+and more than one page has a map or a table of those things, every one of them carries the badges, unless the person named
+the page, and every one of those pages lets the reader add an item and open a marker's items. A reader who adds an item on
+one page and then opens another, the default page included, looks for the marker there too. Say which pages carry them
+in your reply.
+
 The files use the template's own tokens; restyle them as you like. The table and the permissions are created on
 the next `npx rayfin up`, and every later `rayfin up` applies entity changes.
 
@@ -1094,7 +1173,10 @@ files do:
 - **The name shown comes from the caller's token too**, never only from the browser: the name is the signed-in email,
   and the policy checks it with the id - `claims.sub.eq(item.createdById).and(claims.email.eq(item.createdBy))` - so a
   hand-made call with your own id and someone else's name is refused. (`claims.email` is the token's email claim; a
-  Rayfin function sees the same token as `ctx.accessToken`.)
+  Rayfin function sees the same token as `ctx.accessToken`.) A function that checks the name against that token reads
+  the email the way Rayfin's sign-in reads the session's: the `email` claim, else, on a managed-hosting token, which has
+  none, `xms_attr.<app>.rfn_email`. It never falls back to `preferred_username` or `upn`: the session's email never
+  comes from them, so where they differ the person's own email is refused, or a name passes that the policy refuses.
 - **When** is the server's clock, never the browser's: every write that records a time (an item created, an item
   marked done) goes through a Rayfin function that stamps it on the server. Rayfin's data layer (checked on 1.36.2) has
   no server-time default for a field (a `default` is a fixed value), so the browser never sends the time at all. The
@@ -1164,9 +1246,18 @@ const markDone = useCallback(async (taskId: string) => {
     ("Nothing open") before the rows are in.
   - A form's default that comes from data loading elsewhere (the item's owner) is adopted when it arrives, unless the
     reader has already chosen; a lookup behind a choice list that fails says so in the form.
-  - A due date takes `min={today}`, and the server function refuses a past one.
+  - A due date is a calendar day with no time zone, and both sides read "today" one way. The form gives the field
+    `min={today}` in the reader's own date (YYYY-MM-DD from `getFullYear()`, `getMonth()` and `getDate()`, never
+    `toISOString()`, which is UTC's). The server function refuses only a day already past everywhere: one before the date
+    at UTC-12 (`new Date(Date.now() - 12 * 3600_000).toISOString().slice(0, 10)`), the earliest calendar day still
+    current anywhere, so never UTC's today or its own. The server can't know the reader's time zone and mustn't trust one
+    the browser sends, and a server that refuses by UTC's today refuses the reader's today every evening west of UTC: the
+    form offers it, and the save fails with "can't be in the past".
   - Read what the page shows, not every row ever saved: bound the query with `.where(...)` and show the first page as it
-    lands. Bound the DONE items, by when they were done; never bound the open ones, least of all by their due date: the
+    lands on the FIRST load. **A reload keeps what's on screen until the whole reload has landed**, then swaps it in
+    one step: a reload (after a save, on window focus) that hands each page to the list as it arrives cuts the list to
+    its newest page, and the markers and open items beyond it vanish and come back. A reload that fails keeps the list it
+    had and says the refresh failed; it never replaces the list with an error. Bound the DONE items, by when they were done; never bound the open ones, least of all by their due date: the
     most overdue open item is the one the reader most needs, and a due-date window drops it first.
   - A panel whose query failed offers Retry: setup's `BicChartPanel` does, from the query hook's `refetch` (pass the
     hook's whole result).

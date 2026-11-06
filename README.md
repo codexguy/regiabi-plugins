@@ -53,7 +53,7 @@ returns each chart's code in the reply, and your agent writes it into your proje
 the plugin:
 
 ```text
-claude mcp add bic-chart-local -- npx -y @bicharts/chart-mcp@0.6.114
+claude mcp add bic-chart-local -- npx -y @bicharts/chart-mcp@0.6.115
 ```
 
 ### GitHub Copilot CLI
