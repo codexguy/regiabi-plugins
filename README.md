@@ -9,7 +9,8 @@ two-way key, and about 90 everyday chart types, with selection and cross-filteri
 This repository packages the RegiaBI chart MCP server (`com.regiabi/chart-mcp`, published on npm as
 [`@bicharts/chart-mcp`](https://www.npmjs.com/package/@bicharts/chart-mcp)) and its agent skill as a one-command
 plugin for Claude Code, GitHub Copilot CLI, Codex and Gemini CLI. It holds the plugin manifests, the pinned server
-command and the skill. The server itself is the npm package.
+command and the skill. The server itself is the npm package. The Claude Code plugin connects to the same server
+hosted by RegiaBI instead of running it on your machine (see [Claude Code](#claude-code)).
 
 ## What it does
 
@@ -40,6 +41,19 @@ The tools:
 ```text
 /plugin marketplace add codexguy/regiabi-plugins
 /plugin install regiabi-charts@regiabi
+```
+
+The Claude Code plugin connects to RegiaBI's hosted server at `https://bizintelligencechampions.com/mcp`. Claude
+Code signs you in through your browser the first time a tool needs your account (run `/mcp` if it doesn't ask).
+The hosted server profiles each table in memory and drops its rows; it can't read or write your files, so it
+returns each chart's code in the reply, and your agent writes it into your project.
+
+**Building a Fabric App, or want the charts written straight to disk?** `setup_fabric_app`, `suggest_charts`,
+`query_semantic_model` and `generate_chart`'s `out_dir` need the server running on your machine. Add it alongside
+the plugin:
+
+```text
+claude mcp add bic-chart-local -- npx -y @bicharts/chart-mcp@0.6.114
 ```
 
 ### GitHub Copilot CLI
@@ -90,9 +104,8 @@ and renews it on its own, and you can sign a device out at any time from your ac
 **Or use a license key** (a machine with no browser, CI, a container). Leave sign-in alone and give the server
 your account's credentials instead, in one of two ways:
 
-- **When the plugin asks** (Claude Code prompts on install and keeps the key in your system's secure credential
-  store), or as environment variables on the server: `BIC_LICENSEE` and `BIC_LICENSE_KEY`, plus `BIC_SECRET_KEY`
-  if your account uses one.
+- **As environment variables on the server:** `BIC_LICENSEE` and `BIC_LICENSE_KEY`, plus `BIC_SECRET_KEY` if
+  your account uses one.
 - **A credentials file**, so no secret ever sits in a project's committed config. Put this in
   `~/.bic/credentials.json` (or point `BIC_CREDENTIALS_FILE` at another path):
 
@@ -100,7 +113,8 @@ your account's credentials instead, in one of two ways:
   { "licensee": "...", "licenseKey": "..." }
   ```
 
-A key, when one is set, always wins over a sign-in. Leave the plugin's fields blank to sign in instead.
+A key, when one is set, always wins over a sign-in. A key applies to the server on your machine; the hosted server
+behind the Claude Code plugin always uses the browser sign-in.
 
 ## Use
 
@@ -120,7 +134,9 @@ suit your semantic model. `suggest_charts` answers from the model's own numbers.
 - **Signing in** opens your browser at `bizintelligencechampions.com` once; the server then keeps an access token and a
   refresh token in `~/.bic/oauth.json` (readable only by you) and sends the access token with each call to the service.
 - **It runs** one local process: `npx -y @bicharts/chart-mcp@<version>`, the exact version the plugin pins. npm
-  downloads that package from the public npm registry the first time.
+  downloads that package from the public npm registry the first time. The Claude Code plugin runs nothing on your
+  machine: it connects to `https://bizintelligencechampions.com/mcp`, which receives the tables your agent sends
+  it, profiles them in memory and stores no rows.
 - **`assess_data_shape` sends nothing.** It profiles your data on your machine.
 - **`list_eligible_charts`, `suggest_charts` and `generate_chart` call the RegiaBI service** at
   `bizintelligencechampions.com` with your account's credentials and a profile of your table: column names, types,

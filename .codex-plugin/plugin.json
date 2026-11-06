@@ -10,7 +10,7 @@
   "repository": "https://github.com/codexguy/regiabi-plugins",
   "license": "MIT",
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json",
+  "mcpServers": "./.codex-plugin/mcp.json",
   "keywords": ["charts", "data-visualization", "d3", "plotly", "mcp", "fabric", "rayfin", "power-bi", "dashboard"],
   "interface": {
     "displayName": "RegiaBI apps",

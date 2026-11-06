@@ -18,32 +18,8 @@
   "termsOfServiceUrl": "https://bizintelligencechampions.com/terms-regiabi",
   "mcpServers": {
     "bic-chart": {
-      "command": "npx",
-      "args": ["-y", "@bicharts/chart-mcp@0.6.114"],
-      "env": {
-        "BIC_LICENSEE": "${user_config.licensee}",
-        "BIC_LICENSE_KEY": "${user_config.license_key}",
-        "BIC_SECRET_KEY": "${user_config.secret_key}"
-      }
-    }
-  },
-  "userConfig": {
-    "licensee": {
-      "type": "string",
-      "title": "Licensee",
-      "description": "Leave blank to sign in through your browser instead. Otherwise, the licensee name on your RegiaBI account."
-    },
-    "license_key": {
-      "type": "string",
-      "title": "License key",
-      "description": "Leave blank to sign in through your browser instead. Otherwise, the license key for that account.",
-      "sensitive": true
-    },
-    "secret_key": {
-      "type": "string",
-      "title": "Secret key (optional)",
-      "description": "Only if your account uses one.",
-      "sensitive": true
+      "type": "http",
+      "url": "https://bizintelligencechampions.com/mcp"
     }
   }
 }
