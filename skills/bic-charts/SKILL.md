@@ -637,6 +637,19 @@ is:
 blank), `check_app` flags them in the app's `.dax` files, and `check_chart` warns when one value sets a diverging color
 scale's span.
 
+**A share of a whole is 0, not blank, where the whole is there.** `DIVIDE ( CALCULATE ( [Revenue], DimChannel[Channel] =
+"Partner" ), [Revenue] )` is blank for a country with revenue but no partner sales: the part is BLANK, and DIVIDE passes it
+on. A blank drops out of every rank, median and comparison of that field, so a Selection explainer comparing a circled
+group on its partner share leaves the 0% countries out and shows no gap. Add `+ 0` to the part, which keeps the share
+blank where the whole is (so SUMMARIZECOLUMNS still drops a row with no revenue at all):
+
+```dax
+"Partner Share", DIVIDE ( CALCULATE ( [Revenue], DimChannel[Channel] = "Partner" ) + 0, [Revenue] )   -- 0 with no partner sales
+```
+
+`COALESCE ( DIVIDE ( ... ), 0 )` reads 0 too, but keeps a row for every country, revenue or not. `query_semantic_model` and
+`check_app` flag a share written without either.
+
 **A chart's categories come from the data.** Group by the category column and let the chart take every value the
 model holds; never name the categories in the DAX one filter at a time (`CALCULATE([Sales], 'Channel'[Channel] =
 "Online")`, then "Retail", then "Partner"). A value the model adds or renames would drop out silently, and a chart that
@@ -750,6 +763,7 @@ without naming:
 | every place drawn at the same size, because which are high or low matters more than where | World tile-grid cartogram (or US hex-tile cartogram for states) |
 | actual against a budget, plan or target, with the gap shown for each period or unit | Variance chart (budget vs actual) |
 | that same actual-against-target comparison across many accounts or nested groups, read as a table with subtotals | Variance grid (a preview type) - it needs a category to group by; a date series alone is the Variance chart |
+| one total split into its parts level by level, with the reader choosing which field splits each level (a decomposition tree) | Decomposition cards (a preview type) - it needs a measure that adds up and two or more category fields; the opening, re-splitting and paging are drawn inside the chart |
 | a table with one row per item and each value DRAWN (bars, dots or icons in the cells), compact, for scanning down a column and nothing more | Table with embedded |
 | a table a reader WORKS with: sorts, drags column widths, copies cells out, hides columns, scrolls a wide table sideways with frozen columns or rows, opens a row's detail; plain values by default, and where the request asks, data bars, chips, icons, or one value compared with several others as bars (this week against its averages) | Interactive table (a preview type) - name the cells to draw in `prompt`; widths, sort and hidden columns are the reader's, kept through the host's view state |
 | circling a group of points to see what sets them apart from the rest | Selection explainer (a preview type) - the lasso and the comparison are drawn inside the chart; put the other fields to compare in the same table (which ones: below); on a page, give it `selects` so a circled group filters the page (step 6) |
@@ -767,7 +781,8 @@ group statistics (what the circled points share, against the rest) into the app 
 Which other fields to put in its query: 4 to 8 a reader would ask about that can differ across the plot - segments and
 categories (region, main channel), mix shares (online, retail, partner), size (population, a revenue band), and one or two
 measures at most. Leave out row keys, the axes and fields that just track an axis (revenue beside marketing spend): the
-panel tests every field, and each extra field makes the test for every field stricter.
+panel tests every field, and each extra field makes the test for every field stricter. A share is 0 where its part has
+no rows (`DIVIDE ( CALCULATE ( [Revenue], ... ) + 0, [Revenue] )`): a blank share is left out of the comparison.
 
 A chart that draws its own rate control needs the history and the goal, not the model's what-if parameter:
 leave the parameter's table (a `'Price Change'[Price Change]` column, say) out of its query. Grouping by it repeats
@@ -1259,6 +1274,26 @@ const markDone = useCallback(async (taskId: string) => {
     its newest page, and the markers and open items beyond it vanish and come back. A reload that fails keeps the list it
     had and says the refresh failed; it never replaces the list with an error. Bound the DONE items, by when they were done; never bound the open ones, least of all by their due date: the
     most overdue open item is the one the reader most needs, and a due-date window drops it first.
+  - **The panel keeps the rows beside a refresh error, too.** A hook that keeps its rows and sets one `error` on any
+    failed load still loses the list when the panel renders `error ? <p>...</p> : <List />`: one failed refresh (a
+    network blip as the tab regains focus) hides every row and its Mark done button, under a line that may even say the
+    last ones are shown. Have the hook return the two failures apart, and show the load error in place of the rows only
+    while nothing has loaded:
+
+```ts
+// in the hook's reload: the first load has nothing to keep; a later one keeps the list it had
+} catch (e) {
+  if (mine !== seq.current) return;
+  if (loaded.current) setRefreshError(message(e)); else setLoadError(message(e));
+}
+// in the panel
+{loadError ? <p role="alert">The items couldn't load: {loadError} <button onClick={reload}>Retry</button></p>
+  : !loaded ? <p>Loading...</p>
+  : <>{refreshError ? <p role="status">Couldn't refresh ({refreshError}); showing the last ones loaded.</p> : null}
+      <ItemList items={open} /></>}
+```
+
+    `check_app` flags a panel that shows a refreshing hook's error in place of its rows.
   - A panel whose query failed offers Retry: setup's `BicChartPanel` does, from the query hook's `refetch` (pass the
     hook's whole result).
   - A disabled Save says why, beside it ("Pick a country from the list", "The due date can't be in the past"), tied to
@@ -1279,6 +1314,12 @@ const markDone = useCallback(async (taskId: string) => {
     in the form: an owner-of-each-account lookup run for the flag form also places the table's badges and fills the
     follow-ups list, so while it loads, or after it fails, those read as truly empty unless the page says why. A blank
     model value is left out of text, never put in with `String()`: `String(null)` prints "null".
+  - A lookup's rows (any query no chart draws: a form's choice list, every account with its owner) are read by column
+    name with `queryRows(result.data)` from `@bicharts/chart-host/dax`: `row["Account Number"]` for
+    `Accounts[Account Number]`, `row["Total"]` for `[Total]`. Never parse the `Table[Column]` headers yourself, and
+    write source with the file tools, never through a shell heredoc into a script: a pattern that passes through a
+    shell and a script loses its backslashes, and every option reads blank while the tests and the type check pass.
+    `check_app` flags a hand-written header reader.
   - Other people's writes show without a page reload: the hook reloads when the page comes back into view
     (`visibilitychange` to visible, and window `focus`), never on a timer, and a write that happens once (a done)
     reloads whether it succeeds or is refused (`try { await markDone() } finally { await reload() }`), so a refusal
