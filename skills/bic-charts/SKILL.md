@@ -991,6 +991,14 @@ everything it plots. A query that takes only part of a pick's key (`treatAs(cell
 stage cell) names that part: `scopedBy={{ filter: cell, takes: ["Region"] }}` says "Europe", never "Europe · 3-Propose",
 and a stage-only pick adds nothing to that chart's line.
 
+**A panel a pick cannot reach says so on its card.** When a pick can't reach a panel or one of its encodings (its query
+takes only part of the pick's key, or none of it), or a figure's measure removes that pick's filter on purpose (a close
+rate kept across every stage beside open pipeline that follows the stage), that card says so in one line: "Close rate
+ignores a stage pick", "Not filtered by stage". The page then never claims every panel follows ("filters every other
+panel") when one does not: name the picks every panel follows, or leave the claim out. `check_app` flags a chart whose
+scope line names a pick some of its figures remove, and a page that says every panel follows while a panel's card
+doesn't say what it ignores.
+
 `check_app` lists each chart's wiring - filtered query, highlight only, or none - and warns on a panel no click
 reaches, and on a filtered-query panel with no `scopedBy`. Say that list in your reply, with any panel you left whole and why, so a gap is seen before deploy.
 
