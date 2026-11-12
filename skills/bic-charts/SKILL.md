@@ -1315,6 +1315,11 @@ const markDone = useCallback(async (taskId: string) => {
   - A list for a picked owner filters by the owner field the form saves (the follow-up's owner), never by the owner the
     model gives the item's account: a follow-up on Bob's account given to Alice belongs on Alice's list. Count an owner
     badge by that same field.
+  - A list narrowed by more than one thing (the page's owner pick and a badge's focus on one owner or account) names
+    every filter it applies in its heading and its "none" line ("Open follow-ups: Bob, owner Alice"), or keeps them
+    apart: a new page pick clears the focus, and while a focus is set the list doesn't also apply the pick. A heading
+    that names only the focus reads "No open follow-ups for Bob" while Bob has some another pick filtered away.
+    `check_app` flags a list filtered by two narrowings whose heading or "none" line names only one.
   - A "sign in" check asks what the save asks: when the save needs the user's email, `cannotSave` checks
     `user?.id && user.email`, not just `user`, or a reader signed in without an email claim fills in the form and is
     told to sign in.
