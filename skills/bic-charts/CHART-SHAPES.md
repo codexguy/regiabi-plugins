@@ -53,6 +53,7 @@ on the same picture, not a looser one.
 | Clustered heatmap | 2 categorical, 1 continuous | <=50 categories, needs 320x320 px | Plotly | Requires two variables for matrix values |
 | Connected scatterplot | 2 continuous, 6+ time points | needs 300x300 px | D3, PLOTLY | Best for the joint trajectory of two related metrics over time (e.g. units vs revenue, unemployment vs inflation) where the path shape is the insight |
 | Custom small multiples | 1 categorical, 1 continuous | <=16 categories, needs 320x240 px | D3, Matplotlib, Plotly, Seaborn | Best when comparing patterns across categories |
+| Customer segments | 1 categorical, 2 continuous | needs 294x420 px | D3 | One row per customer with days since the last order (or the last order date), a count of orders and a spend, ideally with other fields such as region or acquisition channel - at least a hundred customers |
 | Cutoff tuner | 1 continuous | needs 560x360 px | D3 | One row per case with a model score or rating and the actual yes/no outcome - churn, fraud, default, conversion - when the question is where to draw the line and what each choice costs |
 | Cycle plot | 1 continuous, 24+ time points | needs 320x280 px | D3, PLOTLY | Best for multi-year monthly/quarterly/weekly data where the question is seasonality vs trend ('is Q4 always highest, and is each Q4 growing?') |
 | Decomposition cards | 2 categorical, 1 continuous | needs 294x200 px | D3 | One measure that adds up and two or more category fields; a second measure shows each card's change |
