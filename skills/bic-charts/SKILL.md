@@ -624,8 +624,10 @@ column repeated on every fact row (a country's population on each sale) sums to 
 
 **When the chart is about the records themselves, its grain IS the records.** A scatter of customers, a
 distribution, customer segments or a map of accounts takes one row per customer, account or order - the raw facts -
-and the engine does the shaping. For totals (revenue by region, a monthly trend) keep the chart's grain: given raw rows
-for a total, the engine reads the repeats as a spread to show, and bar, card and donut charts drop out of what fits.
+and the engine does the shaping. For totals (revenue by region, a monthly trend) the chart's grain is the simplest
+request. Raw rows work too where the list offers grains: the types that draw totals are then listed under "Fits once the
+rows are totalled", once per grain, and the person picks one (step 4). Where a list shows no such heading, raw rows for a
+total lose the bar, card and donut charts: query the chart's grain.
 Ratio measures (a growth %, an attainment %, a share) and measures from different fact tables stay as the model
 computes them: raw rows can't rebuild them.
 
@@ -778,6 +780,13 @@ without naming:
 
 If the list doesn't offer what you expected, read its notes: it names a type refused on a count
 when your table is small, and it says when `name_filter` hid description matches.
+
+**A grain is the person's choice, like the chart's form.** When the rows are finer than a type draws (raw rows where
+it wants one per category), the list offers that type under "Fits once the rows are totalled", once per grain: each row
+says how the rows are totalled first and carries a `projection` key, and a type listed twice is the same chart at two
+grains. Don't pick one yourself and don't re-query to total the rows in DAX: ask which grain they want in their own
+words ("revenue per country, or per region?"), then pass that row's name as `chart_type` and its key, copied exactly,
+as `projection`. The chart is drawn at that grain and says so.
 
 The Interactive table and the Variance grid are preview types too, so either may be missing from the list. When the person asked for one and it isn't listed, say so and ask how to go on; don't build a table by hand in its place.
 
