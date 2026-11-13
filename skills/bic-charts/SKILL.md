@@ -622,6 +622,13 @@ has passed the template's check: don't run it again with `run-dax-query`. Don't 
 table and aggregate it in the browser: the Execute Queries API refuses a response over 15 MB, and a
 column repeated on every fact row (a country's population on each sale) sums to nonsense.
 
+**When the chart is about the records themselves, its grain IS the records.** A scatter of customers, a
+distribution, customer segments or a map of accounts takes one row per customer, account or order - the raw facts -
+and the engine does the shaping. For totals (revenue by region, a monthly trend) keep the chart's grain: given raw rows
+for a total, the engine reads the repeats as a spread to show, and bar, card and donut charts drop out of what fits.
+Ratio measures (a growth %, an attainment %, a share) and measures from different fact tables stay as the model
+computes them: raw rows can't rebuild them.
+
 **A "vs" measure is blank where there's nothing to compare against.** `[Goal Attainment %] - 1` is never blank:
 BLANK() - 1 is -1, so SUMMARIZECOLUMNS keeps every row, a place with no goal reads -100%, and on a symmetric diverging
 scale that one mark sets the span and every other draws near-neutral. The same goes for `1 - [Share]` and for
@@ -745,8 +752,9 @@ table and any symbols: `[Occupancy %]` becomes `Occupancy`), saves every row to 
 reads each column's role, format and description from the model (`INFO.VIEW.MEASURES()` / `INFO.VIEW.COLUMNS()`),
 and profiles the result. Its reply ends with the arguments for the next two calls - `csv_path`, `measures`,
 `dimensions`, `formats`, `descriptions` - so pass them to `list_eligible_charts` and `generate_chart` as they
-are. It keeps at most 1,000 rows of a query; the tool says so when it cut a result, and the fix is a query at the
-chart's grain.
+are. It keeps up to 250,000 rows of a query by default (the setting `BIC_MCP_QUERY_ROW_CAP` raises it, up to 1,000,000;
+the older `fabric-app-data` layout only 1,000, that CLI's own limit) and says so when a result is past it; only then
+narrow the query, with a filter or the grain the chart reads.
 
 **4. Ask before choosing, then choose what answers the question.** `list_eligible_charts` on that
 data. Pass `chart_type` to `generate_chart` only for a type the person named; when they only asked for a chart, leave it
