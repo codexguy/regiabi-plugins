@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "regiabi-charts",
-  "version": "0.6.125",
+  "version": "0.6.126",
   "description": "AI Data Components over MCP: working what-if apps, interactive tables and maps, plus 90 chart types.",
   "author": {
     "name": "CodeX Enterprises LLC",
