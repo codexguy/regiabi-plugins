@@ -777,6 +777,9 @@ without naming:
 | a table with one row per item and each value DRAWN (bars, dots or icons in the cells), compact, for scanning down a column and nothing more | Table with embedded |
 | a table a reader WORKS with: sorts, drags column widths, copies cells out, hides columns, scrolls a wide table sideways with frozen columns or rows, opens a row's detail; plain values by default, and where the request asks, data bars, chips, icons, or one value compared with several others as bars (this week against its averages) | Interactive table (a preview type) - name the cells to draw in `prompt`; widths, sort and hidden columns are the reader's, kept through the host's view state |
 | circling a group of points to see what sets them apart from the rest | Selection explainer (a preview type) - the lasso and the comparison are drawn inside the chart; put the other fields to compare in the same table (which ones: below); on a page, give it `selects` so a circled group filters the page (step 6) |
+| how long customers stay, by channel or plan, and whether a gap between groups is real | Retention curves (a preview type) - one row per customer with the start and end dates; the Compare by switch is drawn inside the chart |
+| each start month or quarter's share of customers still with us one, three, six or more months later | Cohort retention triangle (a preview type) - it needs the start date; the months nobody could have been watched yet are drawn as not seen, never 0% |
+| the customers most likely to leave next, with the reason | Churn risk list (a preview type) - one row per customer with an id or name; it lists every active customer, most likely to leave first |
 
 If the list doesn't offer what you expected, read its notes: it names a type refused on a count
 when your table is small, and it says when `name_filter` hid description matches.
@@ -789,6 +792,8 @@ words ("revenue per country, or per region?"), then pass that row's name as `cha
 as `projection`. The chart is drawn at that grain and says so.
 
 The Interactive table and the Variance grid are preview types too, so either may be missing from the list. When the person asked for one and it isn't listed, say so and ask how to go on; don't build a table by hand in its place.
+
+Retention curves, the Cohort retention triangle and the Churn risk list are preview types, so any of them may be missing from the list; when the person asked for one and it isn't listed, say so and ask how to go on. Query ONE row per customer: the start and end dates as dates (a blank end while still a customer), the as-of date if the model has one (a snapshot date or a `Data As Of` measure), the fields to compare, an id or name, and last activity as a measure. Never join the activity rows into the customer query, and never compute retention, a curve, a cohort share or a risk score in the app: every number and word is the chart's.
 
 The Selection explainer is a preview type: the server offers it only where it's switched on, so it may be missing from the
 list even when the data fits. When `list_eligible_charts` doesn't list it for your data, tell the person it isn't available

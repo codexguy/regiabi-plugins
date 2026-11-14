@@ -1,11 +1,11 @@
 {
   "name": "regiabi-charts",
-  "version": "0.6.124",
+  "version": "0.6.125",
   "description": "AI Data Components over MCP: working what-if apps, interactive tables and maps, plus 90 chart types.",
   "mcpServers": {
     "bic-chart": {
       "command": "npx",
-      "args": ["-y", "@bicharts/chart-mcp@0.6.124"]
+      "args": ["-y", "@bicharts/chart-mcp@0.6.125"]
     }
   }
 }

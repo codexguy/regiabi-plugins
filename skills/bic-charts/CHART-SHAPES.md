@@ -49,8 +49,10 @@ on the same picture, not a looser one.
 | Card with multiple KPI | 2 continuous | needs 180x100 px | D3, Plotly | Multiple independent numeric metrics that should be surfaced together; KPI dashboards; long-narrow / short-wide viewports |
 | Card with sparkline | 1 continuous | needs 140x80 px | D3, Plotly | One numeric metric trending over an ordered dimension; small viewports |
 | Chord diagram | 2 categorical, 1 continuous | <=25 categories, <=30 nodes, needs 294x320 px | D3 | Requires matrix data showing bidirectional flows between entities; best for migration, trade, or relationship intensity data |
+| Churn risk list | 1 categorical | needs 294x200 px | D3 | One row per customer with a name or id, when they started and when they left (blank while active) - at least one active customer |
 | Circular heatmap | 1 categorical, 1 continuous | <=60 categories, needs 294x380 px | D3, Matplotlib, Plotly | Requires two dimensions - a cyclical one such as hour, weekday or month around the angle and a second category or date for the rings - and one measure for the colour |
 | Clustered heatmap | 2 categorical, 1 continuous | <=50 categories, needs 320x320 px | Plotly | Requires two variables for matrix values |
+| Cohort retention triangle | - | needs 340x280 px | D3 | One row per customer with a start date and an end date that is blank while still a customer, over at least a year of starts |
 | Connected scatterplot | 2 continuous, 6+ time points | needs 300x300 px | D3, PLOTLY | Best for the joint trajectory of two related metrics over time (e.g. units vs revenue, unemployment vs inflation) where the path shape is the insight |
 | Custom small multiples | 1 categorical, 1 continuous | <=16 categories, needs 320x240 px | D3, Matplotlib, Plotly, Seaborn | Best when comparing patterns across categories |
 | Customer segments | 1 categorical, 2 continuous | needs 294x420 px | D3 | One row per customer with days since the last order (or the last order date), a count of orders and a spend, ideally with other fields such as region or acquisition channel - at least a hundred customers |
@@ -111,6 +113,7 @@ on the same picture, not a looser one.
 | Radar (spider) chart | 1 continuous | <=8 axes, needs 700x480 px | D3, Matplotlib, Plotly | Requires multiple continuous variables across categories |
 | Range-compare time series | 1 continuous, 15+ time points | needs 480x320 px | D3 | Best for a single measure tracked over many dates when the story is a chosen window: drag the two handles to total a period and compare its endpoints, like revenue across a campaign or sensor readings around an incident |
 | Regression plot (line with CI) | 2 continuous | needs 294x380 px | D3, Matplotlib, Plotly, Seaborn, Statsmodels | Requires two continuous variables - a predictor and a response |
+| Retention curves | - | needs 320x300 px | D3 | One row per customer with when they started and when they left (blank while still a customer), or their tenure and whether they left, plus a field to compare such as channel or plan - at least 30 customers |
 | Ridgeline plots | 1 categorical, 1 continuous | <=25 categories, needs 280x280 px | D3, Matplotlib, Plotly, Seaborn | Best with many observations per category |
 | Rose (Coxcomb) chart | 1 categorical | <=24 categories, needs 294x300 px | D3 | Best for cyclical or directional categories: wind direction, hour of day, month of year, compass sectors - anywhere the categories wrap around rather than running left to right |
 | Rotating carousel | 1 continuous | <=12 categories, needs 294x200 px | D3 | Best when each category value deserves its own small chart and the tile has room for only one at a time; the reader turns it, or it turns itself |
@@ -133,6 +136,7 @@ on the same picture, not a looser one.
 | Sunburst chart | 2 categorical, 1 continuous | needs 400x300 px | D3, Matplotlib, Plotly | Requires hierarchical categorical data |
 | Table with embedded | 1 categorical, 1 continuous | <=40 categories, needs 294x200 px | D3 | Best for a small set of items compared across several attributes at once (a forecast/roster/scorecard table) |
 | Ternary plot | 3 continuous | needs 294x320 px | D3 | Three measures that add up to the same total on every row - product mix, budget allocation, vote share, channel split |
+| Territory planner | 1 categorical, lat/lon | needs 420x380 px | D3 | One row per account with its location, its current rep and a workload measure - accounts by sales owner with yearly visit hours, stores by area manager - for 2 to 12 reps in North America |
 | Thermometer | 1 continuous, a bounded scale | needs 90x220 px | D3 | A value against a ceiling the data states, overall or one tube per category, in a tall narrow tile - a sidebar rail or a column of KPIs down a page edge; a constant value is a valid reading |
 | Time series plot | 1 continuous | needs 460x340 px | D3, Plotly | Requires a datetime axis with at least one continuous variable |
 | Trail | 2 continuous | needs 294x220 px | D3 | Best when a series has both a level and a weight: price with traded volume, sentiment with mention count, a metric with the sample size behind it |
