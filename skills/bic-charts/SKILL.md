@@ -1013,6 +1013,13 @@ everything it plots. A query that takes only part of a pick's key (`treatAs(cell
 stage cell) names that part: `scopedBy={{ filter: cell, takes: ["Region"] }}` says "Europe", never "Europe · 3-Propose",
 and a stage-only pick adds nothing to that chart's line.
 
+**A chart that rates every row shows the picked ones: give it every row and pass the picks as `viewedBy`.** A Churn risk
+list rates each customer against how long every customer has stayed. Narrow its query by a pick and it rates only what
+the pick left - one joining quarter's customers can't be rated at all, since none of them was watched longer than the
+others. So its query takes NONE of the page's picks, it carries each pick's key column (a quarter label column for a
+quarter pick), and the picks go in `viewedBy={[channel, quarter]}`: the chart rates against everyone and lists the picked
+customers, and its caption says both ("124 active customers in 2023 Q2 ...; each rated against all 3,600 customers").
+
 **A panel a pick cannot reach says so on its card.** When a pick can't reach a panel or one of its encodings (its query
 takes only part of the pick's key, or none of it), or a figure's measure removes that pick's filter on purpose (a close
 rate kept across every stage beside open pipeline that follows the stage), that card says so in one line: "Close rate
@@ -1405,6 +1412,10 @@ up. `features: ["scenarios"]` writes the `SavedScenario` entity, `useSavedScenar
 name, list, apply, and which one is applied now - `applied`, the saved scenario whose values the chart shows; a failed
 save keeps what was typed), and, with Rayfin's functions on, the `addSavedScenario` function each save runs through, so
 the server stamps its time.
+
+A chart's own segmented row (Retention curves' "Compare by Channel | Plan | Region") is a control too:
+`controls.values.compare` is the reader's choice, from the first draw, and the page re-renders when the reader switches
+it - so a page that filters by what the chart compares reads it there, never from the chart's source.
 
 **8. What stays the template's job - this is additive, never a replacement:** sign-in, the query hooks
 (`useSemanticModelQuery`; a page filter feeds it through `filterQuery`), the theme (`useCssTheme`, which
