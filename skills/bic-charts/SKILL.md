@@ -793,7 +793,7 @@ as `projection`. The chart is drawn at that grain and says so.
 
 The Interactive table and the Variance grid are preview types too, so either may be missing from the list. When the person asked for one and it isn't listed, say so and ask how to go on; don't build a table by hand in its place.
 
-Retention curves, the Cohort retention triangle and the Churn risk list are preview types, so any of them may be missing from the list; when the person asked for one and it isn't listed, say so and ask how to go on. Query ONE row per customer: the start and end dates as dates (a blank end while still a customer), the as-of date if the model has one (a snapshot date or a `Data As Of` measure), the fields to compare, an id or name, and last activity as a measure. Never join the activity rows into the customer query, and never compute retention, a curve, a cohort share or a risk score in the app: every number and word is the chart's.
+Retention curves, the Cohort retention triangle and the Churn risk list are preview types, so any of them may be missing from the list; when the person asked for one and it isn't listed, say so and ask how to go on. Query ONE row per customer: the start and end dates as dates (a blank end while still a customer), the as-of date if the model has one (a snapshot date or a `Data As Of` measure), the fields to compare, the customer's key and name, and last activity as a measure; pass the customer key as the id even when a name reads better (two customers can share a name, and a repeated id counts once), and the list shows the name beside it. A headline figure beside these charts says what it is measured over and when: 12-month retention names its base (customers who joined at least 12 months before the as-of date), a "last 90 days" count names the day it ends, and a blank figure says why (no customer in the pick can be measured that long), never a bare n/a. Never join the activity rows into the customer query, and never compute retention, a curve, a cohort share or a risk score in the app: every number and word is the chart's.
 
 The Selection explainer is a preview type: the server offers it only where it's switched on, so it may be missing from the
 list even when the data fits. When `list_eligible_charts` doesn't list it for your data, tell the person it isn't available
@@ -982,6 +982,25 @@ clears the others, so the most recent pick is the page's one pick; every member'
 whichever panel shows it clears it; and only the member holding it is active (one chip, one scope line). Without the
 group they are separate picks, ANDed: a country picked on the map and then in the table is held twice, and clicking it
 again on the map leaves the page filtered by the table's. `check_app` flags filters on one key without a group.
+
+**A group is for the SAME pick offered in two panels, never for a drill-in.** A pick that narrows INSIDE another - a
+segment picked on a chart, then one customer in the table that segment narrowed - is its own filter with NO group, ANDed
+with the outer pick: the table's query keeps taking the segment's filter (and passes it as `scopedBy`), and the segments
+chart does not follow the table's. In one group the newest pick is the page's only pick, so a click on a row clears the
+segment and the table refills with every customer, losing the drill-down at the moment the reader clicks into it.
+`check_app` flags a drill-in held in a group (one panel follows the other one way only). Every other panel takes BOTH
+filters, ANDed - `treatAs(segment, ...)` and `treatAs(customer, ...)`, `scopedBy={[segment, customer]}` - never one in
+place of the other (`customer.active ? customer : segment`): the inner pick is inside the outer one anyway. And the inner
+pick is cleared when the outer one changes, `useEffect(() => segment.onChange(() => customer.clear()), [segment,
+customer])`, so a customer held from one segment never narrows the page after the reader picks another.
+
+**A tag on a segment belongs on that segment's card.** When the person tags segments (a campaign, an owner), key each tag
+by the segment's NAME - the Customer segments chart keeps names across a refresh and a filter - and store the tag, its
+owner and when it was saved in the app's data. Pass them to the chart as `segmentTags: { "<segment name>": [{ tag,
+owner, at }] }` in its options: the newest tag shows on that segment's card, and a tag on a segment not drawn now is
+counted in its caption. A tag kept as a list of customer ids, or only in a list beside the chart, leaves a tagged segment
+looking untagged. "Gained or lost since the last tag" is the chart's too: put the three inputs as they stood on the
+last tag's day in the chart's query and name them in the request, so the chart reports each segment's gained and lost.
 
 ```tsx
 const fromMap = useBicFilter("CountryIso3", { label: "Country (map)", display: "CountryName", group: "country" });
@@ -1238,6 +1257,12 @@ files do:
   permission with no policy lets a second person mark a done item done again and overwrite who closed it. Key the row
   by the item with a unique field, under the same who-check, so a second one fails at the database and the first
   stays; an item is open while it has no such row, and only an open item offers the action.
+- **An open item stays closable after its subject leaves.** The form that records an outcome looks its subject up in
+  every row the model has (every customer, every account), or reads the name saved on the item - never only the active
+  list the page shows. An attempt filed on a customer who has since left is still open, the owner's open count still
+  counts it, and its outcome must still be saveable: most often the outcome IS that they left. Open it from the owner's
+  open list as well as from its badge, and offer its actions from the saved item, not from a lookup that can come back empty.
+  A save that fails says so IN the dialog that made it, beside its buttons - never only in a panel the dialog covers.
 
 ```ts
 // rayfin/data/TaskDone.ts
