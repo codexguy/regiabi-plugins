@@ -246,8 +246,9 @@ it falls short, and says so.
 **Generation takes minutes.** Fire the calls for independent charts **in parallel** rather
 than in sequence — it is the difference between ~4 minutes and ~12.
 
-**Where the files land.** `out_dir` and `csv_path` resolve against the MCP server's working
-directory (where the agent session started), not your project, so pass absolute paths.
+**Where the files land.** `out_dir` resolves against the MCP server's working directory (where
+the agent session started), not your project, so pass an absolute path. A `csv_path` is looked for
+in the working directory, then in the project folder.
 React: `src/charts/<name>`. Blazor: `wwwroot/charts/<name>` - the page fetches them as static
 files. The language auto-detect also reads that working directory, and a .NET project gives it
 nothing to read, so for Blazor name `renderer: "D3"` (chart-host runs D3 charts).
